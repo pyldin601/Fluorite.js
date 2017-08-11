@@ -1,2 +1,2 @@
 # Fluorite.js
-A lightweight ORM based on Knex.js query builder.
+Lightweight ORM based on Knex.js query builder.
