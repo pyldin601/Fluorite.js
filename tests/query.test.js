@@ -84,4 +84,9 @@ describe('Query Tests', () => {
     const count = await Foo.count();
     expect(count).toBe(2);
   });
+
+  it('Pluck names', async () => {
+    const names = await Foo.filter({ 'age__gt': 18 }).pluck('name');
+    expect(JSON.stringify(names)).toBe('["John Doe","Bob Marley"]');
+  });
 });
