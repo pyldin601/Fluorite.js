@@ -122,7 +122,7 @@ describe('Model tests', () => {
   });
 
   it('Fail if deleting new entity', () => {
-    return expect(new Foo({ name: 'Abc', age: 10 }).remove()).rejects.toBeInstanceOf(TypeError);
+    return expect(new Foo({ name: 'Abc', age: 10 }).remove()).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('Test scope functionality', async () => {
