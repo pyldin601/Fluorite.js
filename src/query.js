@@ -43,6 +43,16 @@ export default class Query {
     return this;
   }
 
+  limit(number) {
+    this.knexQuery.limit(number);
+    return this;
+  }
+
+  offset(number) {
+    this.knexQuery.offset(number);
+    return this;
+  }
+
   query(callback) {
     callback(this.knexQuery);
     return this;

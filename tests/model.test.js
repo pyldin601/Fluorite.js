@@ -1,3 +1,4 @@
+import { first } from 'lodash';
 import knex from './services/knex';
 import Foo from './models/Foo';
 import { NotFoundError } from '../src';
@@ -112,5 +113,14 @@ describe('Model tests', () => {
     await foo.remove();
 
     return expect(Foo.find(1)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('Test scope functionality', async () => {
+    const foo1 = await Foo.query().first().fetchAll();
+    expect(foo1.length).toBe(1);
+
+    const foo2 = await Foo.query().last(2).fetchAll();
+    expect(first(foo2).id).toBe(3);
+    expect(foo2.length).toBe(2);
   });
 });

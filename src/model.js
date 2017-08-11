@@ -28,14 +28,13 @@ export default (knex) => class Model {
   static table = null;
   static idAttribute = 'id';
   static scope = {
-    first: (qb) => qb.offset(0).limit(1),
   };
 
   static get knex() {
     return knex;
   }
 
-  constructor(attributes = {}, storedAttributes = {}) {
+  constructor(attributes, storedAttributes = {}) {
     this.attributes = attributes;
     this.storedAttributes = storedAttributes;
   }
@@ -157,7 +156,22 @@ export default (knex) => class Model {
   }
 
   static query() {
-    return new Query(this);
+    const query = new Query(this);
+    return new Proxy(query, {
+      get(target, property, receiver) {
+        if (property in target) {
+          return target[property];
+        }
+
+        if (property in target.modelClass.scope) {
+          const scope = target.modelClass.scope[property];
+          return (...args) => {
+            scope(target, ...args);
+            return target;
+          }
+        }
+      }
+    });
   }
 
   static filter(attributes) {
