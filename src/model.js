@@ -27,6 +27,10 @@ export default (knex) => class Model {
     return this.attributes;
   }
 
+  hasMany(relatedClass, foreignKey, foreignKeyTarget) {
+    return new Query(relatedClass).filter({ [foreignKey]: this.get(foreignKeyTarget) })
+  }
+
   toJSON() {
     return this.serialize();
   }
