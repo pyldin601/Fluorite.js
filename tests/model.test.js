@@ -43,15 +43,6 @@ describe('Model tests', () => {
     }
   });
 
-  it('Test fetchAll', async () => {
-    const foos = await Foo.fetchAll();
-    expect(foos).toBeInstanceOf(Array);
-    expect(foos.length).toBe(3);
-    for (const foo of foos) {
-      expect(foo).toBeInstanceOf(Foo);
-    }
-  });
-
   it('Test serialization', async () => {
     const foos = await Foo.fetchAll();
     const json = JSON.stringify(foos);
