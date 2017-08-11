@@ -83,6 +83,11 @@ describe('Model tests', () => {
     expect(await qb1.count()).toBe(3);
   });
 
+  it('Fetch One', async () => {
+    const foo = await Foo.fetchOne();
+    expect(foo).toBeInstanceOf(Foo);
+  });
+
   it('Create entity', async () => {
     const foo = new Foo({ name: 'Alan Davey', age: 42 });
     expect(foo.isNew).toBeTruthy();
@@ -96,6 +101,12 @@ describe('Model tests', () => {
   it('Update entity', async () => {
     const foo = await Foo.find(1);
     foo.set('name', 'Other Guy');
+    foo.set({
+      name: 'Other Guy',
+    });
+    await foo.save();
+
+    // Do not update if nothing to update
     await foo.save();
 
     const updatedFoo = await Foo.find(1);
@@ -108,6 +119,10 @@ describe('Model tests', () => {
     await foo.remove();
 
     return expect(Foo.find(1)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('Fail if deleting new entity', () => {
+    return expect(new Foo({ name: 'Abc', age: 10 }).remove()).rejects.toBeInstanceOf(TypeError);
   });
 
   it('Test scope functionality', async () => {

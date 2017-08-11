@@ -93,6 +93,7 @@ export default (knex) => class Model {
       .insert(this.attributesWithoutId, this.constructor.idAttribute);
     const lastId = last(ids);
     this.attributes[this.constructor.idAttribute] = lastId;
+    this.storedAttributes = this.attributes;
     return lastId;
   }
 
@@ -101,10 +102,11 @@ export default (knex) => class Model {
     if (isEmpty(updatedAttributes)) {
       return;
     }
-    return this.constructor
+    await this.constructor
       .knex(this.constructor.table)
       .update(updatedAttributes)
       .where({ [this.constructor.idAttribute]: this.id });
+    this.storedAttributes = this.attributes;
   }
 
   serialize() {
