@@ -1,4 +1,5 @@
 import { NotFoundError } from './';
+import Query from './query';
 
 export default (knex) => class Model {
   static table = null;
@@ -23,16 +24,30 @@ export default (knex) => class Model {
     return this.attributes[name];
   }
 
-  static find(id) {
-    return knex(this.table)
-      .where(this.idAttribute, id)
-      .first()
-      .then(row => {
-        if (!row) {
-          return Promise.reject(new NotFoundError('Entity not found'));
-        }
-        return row;
-      })
-      .then(row => new this(row));
+  serialize() {
+    return this.attributes;
   }
+
+  toJSON() {
+    return this.serialize();
+  }
+
+  static find(id) {
+    return this.query()
+      .filter({ [this.idAttribute]: id })
+      .fetchOne();
+  }
+
+  static query() {
+    return new Query(this);
+  }
+
+  static filter(attributes) {
+    return this.query().filter(attributes);
+  }
+
+  static fetchAll() {
+    return new Query(this).fetchAll();
+  }
+
 };
