@@ -86,4 +86,31 @@ describe('Model tests', () => {
     expect(await qb2.count()).toBe(2);
     expect(await qb1.count()).toBe(3);
   });
+
+  it('Create entity', async () => {
+    const foo = new Foo({ name: 'Alan Davey', age: 42 });
+    expect(foo.isNew).toBeTruthy();
+    expect(await Foo.filter({ 'name__eq': 'Alan Davey' }).count()).toBe(0);
+
+    await foo.save();
+    expect(foo.isNew).toBeFalsy();
+    expect(await Foo.filter({ 'name__eq': 'Alan Davey' }).count()).toBe(1);
+  });
+
+  it('Update entity', async () => {
+    const foo = await Foo.find(1);
+    foo.set('name', 'Other Guy');
+    await foo.save();
+
+    const updatedFoo = await Foo.find(1);
+    expect(updatedFoo.get('name')).toBe('Other Guy');
+  });
+
+  it('Delete entity', async () => {
+    const foo = await Foo.find(1);
+
+    await foo.remove();
+
+    return expect(Foo.find(1)).rejects.toBeInstanceOf(NotFoundError);
+  });
 });

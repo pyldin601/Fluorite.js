@@ -6,6 +6,9 @@ const getValue = (qb) => (
   qb.first().then(row => first(Object.values(row)))
 );
 
+const wrap = (row, modelClass) =>
+  new modelClass(row, Object.assign({}, row));
+
 export default class Query {
   constructor(modelClass) {
     this.modelClass = modelClass;
@@ -30,13 +33,13 @@ export default class Query {
       throw new NotFoundError('Entity not found');
     }
 
-    return new this.modelClass(row);
+    return wrap(row, this.modelClass);
   }
 
   fetchAll() {
     return this.knexQuery
-      .select('*')
-      .then(rows => rows.map(row => new this.modelClass(row)));
+      .select()
+      .then(rows => rows.map(row => wrap(row, this.modelClass)));
   }
 
   pluck(column) {
