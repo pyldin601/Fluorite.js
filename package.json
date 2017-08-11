@@ -2,19 +2,22 @@
   "name": "fluorite",
   "version": "1.0.0",
   "description": "ORM library",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "build": "NODE_ENV=production babel src --out-dir dist --source-maps inline",
+    "prepublish": "npm run build"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Roman Lakhtadyr <roman.lakhtadyr@gmail.com>",
+  "license": "MIT",
   "devDependencies": {
-    "babel-jest": "^20.0.3",
-    "babel-plugin-transform-builtin-extend": "^1.1.2",
-    "babel-preset-env": "^1.6.0",
-    "babel-preset-stage-0": "^6.24.1",
-    "jest": "^20.0.4",
-    "sqlite3": "^3.1.9"
+    "babel-cli": "*",
+    "babel-jest": "^20",
+    "babel-plugin-transform-builtin-extend": "*",
+    "babel-preset-env": "*",
+    "babel-preset-stage-0": "*",
+    "jest": "^20",
+    "sqlite3": "*"
   },
   "dependencies": {
     "knex": "^0.13.0"
