@@ -18,10 +18,6 @@ export default class Query {
     return this;
   }
 
-  cleanFilter() {
-
-  }
-
   query(callback) {
     callback(this.knexQuery);
     return this;
