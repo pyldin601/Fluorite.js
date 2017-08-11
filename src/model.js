@@ -1,4 +1,3 @@
-import { NotFoundError } from './';
 import Query from './query';
 
 export default (knex) => class Model {
@@ -47,7 +46,14 @@ export default (knex) => class Model {
   }
 
   static fetchAll() {
-    return new Query(this).fetchAll();
+    return this.query().fetchAll();
   }
 
+  static fetchOne() {
+    return this.query().fetchOne();
+  }
+
+  static count() {
+    return this.query().count();
+  }
 };

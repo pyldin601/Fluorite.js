@@ -64,4 +64,26 @@ describe('Model tests', () => {
     const foos = await Foo.filter({ 'age__gt': 18 }).fetchAll();
     expect(foos.length).toBe(2);
   });
+
+  it('Test max aggregation', async () => {
+    const maxAge = await Foo.query().max('age');
+    expect(maxAge).toBe(72);
+  });
+
+  it('Test aggregation on empty collection', async () => {
+    const maxAge = await Foo.filter({ 'age_gt': 100 }).max('age');
+    expect(maxAge).toBeNull();
+  });
+
+  it('Test count on empty collection', async () => {
+    const maxAge = await Foo.filter({ 'age_gt': 100 }).count();
+    expect(maxAge).toBe(0);
+  });
+
+  it('Test clone', async () => {
+    const qb1 = Foo.query();
+    const qb2 = qb1.clone().filter({ 'age__gt': 18 });
+    expect(await qb2.count()).toBe(2);
+    expect(await qb1.count()).toBe(3);
+  });
 });

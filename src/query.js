@@ -1,5 +1,10 @@
+import { first } from 'lodash';
 import { NotFoundError } from './';
 import filter from './filter';
+
+const getValue = (qb) => (
+  qb.first().then(row => first(Object.values(row)))
+);
 
 export default class Query {
   constructor(modelClass) {
@@ -11,6 +16,10 @@ export default class Query {
   filter(attributes) {
     filter(this.knexQuery, attributes);
     return this;
+  }
+
+  cleanFilter() {
+
   }
 
   query(callback) {
@@ -38,15 +47,37 @@ export default class Query {
     return this.knexQuery.pluck(column);
   }
 
-  count(column = null) {
-    return this.knexQuery.count();
-  }
-
   update(attributes) {
     return this.knexQuery.update(attributes);
   }
 
   remove() {
     return this.knexQuery.delete();
+  }
+
+  count(column = null) {
+    return getValue(this.knexQuery.count(column));
+  }
+
+  min(column) {
+    return getValue(this.knexQuery.min(column));
+  }
+
+  max(column) {
+    return getValue(this.knexQuery.max(column));
+  }
+
+  sum(column) {
+    return getValue(this.knexQuery.sum(column));
+  }
+
+  avg(column) {
+    return getValue(this.knexQuery.avg(column));
+  }
+
+  clone() {
+    const that = new this.constructor(this.modelClass);
+    that.knexQuery = this.knexQuery.clone();
+    return that;
   }
 };

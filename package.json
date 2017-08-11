@@ -20,6 +20,7 @@
     "sqlite3": "*"
   },
   "dependencies": {
-    "knex": "^0.13.0"
+    "knex": "^0.13.0",
+    "lodash": "^4.17.4"
   }
 }
