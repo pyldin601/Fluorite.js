@@ -1,5 +1,6 @@
 import knex from './services/knex';
 import Foo from './models/Foo';
+import { NotFoundError } from '../src';
 
 beforeAll(async () => {
   await knex.schema.createTable('foo', (table) => {
@@ -18,14 +19,20 @@ describe('Model tests', () => {
     expect(foo.get('name')).toBe('Bob Marley');
   });
 
-  it('Test find by id (exists)', async () => {
+  it('Test find by id (if exists)', async () => {
     const foo1 = await Foo.find(1);
     expect(foo1.attributes).toEqual({ id: 1, name: 'John Doe' });
     expect(foo1.id).toBe(1);
     expect(foo1.get('name')).toBe('John Doe');
   });
 
-  it('Test find by id (not exists)', () => {
-    return expect(Foo.find(10)).rejects.toBeInstanceOf(Error);
+  it('Test find by id (if not exists)', async () => {
+    expect.assertions(2);
+    try {
+      await Foo.find(10);
+    } catch (e) {
+      expect(e).toBeInstanceOf(NotFoundError)
+      expect(e.message).toBe('Entity not found');
+    }
   });
 });

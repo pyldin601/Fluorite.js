@@ -1,7 +1,11 @@
+import { NotFoundError } from './';
+
 export default (knex) => class Model {
   static table = null;
   static idAttribute = 'id';
-  static scope = {};
+  static scope = {
+    first: (qb) => qb.offset(0).limit(1),
+  };
 
   static get knex() {
     return knex;
@@ -25,7 +29,7 @@ export default (knex) => class Model {
       .first()
       .then(row => {
         if (!row) {
-          return Promise.reject(new Error('Entity not found'));
+          return Promise.reject(new NotFoundError('Entity not found'));
         }
         return row;
       })
