@@ -1,9 +1,8 @@
 import knex from './services/knex';
 import User from './models/User';
 import Thing from './models/Thing';
-import { NotFoundError } from '../src';
 
-beforeAll(async () => {
+beforeEach(async () => {
   await knex.schema.createTable('users', (table) => {
     table.increments();
     table.string('name').unsigned().notNullable();
@@ -47,6 +46,13 @@ beforeAll(async () => {
 
   await knex('addresses_users').insert({ user_id: 2, address_id: 1 });
   await knex('addresses_users').insert({ user_id: 2, address_id: 3 });
+});
+
+afterEach(async () => {
+  await knex.schema.dropTable('addresses_users');
+  await knex.schema.dropTable('addresses');
+  await knex.schema.dropTable('things');
+  await knex.schema.dropTable('users');
 });
 
 describe('Test relations', () => {

@@ -6,5 +6,4 @@ export default knex({
     filename: ':memory:',
   },
   useNullAsDefault: true,
-  debug: true,
 });

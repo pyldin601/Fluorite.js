@@ -3,7 +3,7 @@ import knex from './services/knex';
 import Foo from './models/Foo';
 import { NotFoundError } from '../src';
 
-beforeAll(async () => {
+beforeEach(async () => {
   await knex.schema.createTable('foo', (table) => {
     table.increments();
     table.string('name').unsigned().notNullable();
@@ -13,6 +13,10 @@ beforeAll(async () => {
   await knex('foo').insert({ name: 'John Doe', age: 46 });
   await knex('foo').insert({ name: 'Bob Marley', age: 72 });
   await knex('foo').insert({ name: 'Billy', age: 12 });
+});
+
+afterEach(async () => {
+  await knex.schema.dropTable('foo');
 });
 
 describe('Model tests', () => {

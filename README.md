@@ -3,3 +3,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/pldin601/Fluorite.js/badge.svg?branch=master)](https://coveralls.io/github/pldin601/Fluorite.js?branch=master)
 
 Lightweight ORM based on Knex.js query builder.
+
+## Supports
+* Queries
+* Scopes
+* Bulk update and delete
+* `belongsTo`, `belongsToMany` and `hasMany` relations
