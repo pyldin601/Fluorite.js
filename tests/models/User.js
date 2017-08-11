@@ -1,4 +1,5 @@
 import Thing from './Thing';
+import Address from './Address';
 import fluorite from '../services/fluorite';
 
 export default class User extends fluorite.Model {
@@ -6,5 +7,9 @@ export default class User extends fluorite.Model {
 
   things() {
     return this.hasMany(Thing);
+  }
+
+  addresses() {
+    return this.belongsToMany(Address);
   }
 }

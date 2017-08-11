@@ -1,4 +1,4 @@
-import { pickBy, isNil, last, isEmpty } from 'lodash';
+import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
 import Query from './query';
 import { NotFoundError } from './error';
 
@@ -100,6 +100,28 @@ export default (knex) => class Model {
     const fk = foreignKey || `${relatedClass.name.toLowerCase()}_id`;
     const fkt = foreignKeyTarget || relatedClass.idAttribute;
     return new Query(relatedClass).filter({ [fkt]: this.get(fk) });
+  }
+
+  belongsToMany(
+    relatedClass,
+    pivotTableName,
+    thisForeignKey,
+    thatForeignKey,
+    thisForeignKeyTarget,
+    thatForeignKeyTarget,
+  ) {
+    const pivotTn = pivotTableName || sortBy([this.constructor.table, relatedClass.table]).join('_');
+    const thisFk = thisForeignKey || `${this.constructor.name.toLowerCase()}_id`;
+    const thatFk = thatForeignKey || `${relatedClass.name.toLowerCase()}_id`;
+    const thisFkt = thisForeignKeyTarget || this.constructor.idAttribute;
+    const thatFkt = thatForeignKeyTarget || relatedClass.idAttribute;
+
+    return new Query(relatedClass)
+      .query(q => q
+        .innerJoin(pivotTn, `${pivotTn}.${thatFk}`, `${relatedClass.table}.${thatFkt}`)
+        .select(`${relatedClass.table}.*`)
+        .where({ [`${pivotTn}.${thisFk}`]: this.get(thisFkt) }),
+      );
   }
 
   toJSON() {
