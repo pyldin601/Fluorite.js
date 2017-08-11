@@ -4,8 +4,8 @@
 
 Lightweight ORM based on Knex.js query builder.
 
-## Supports
-* Queries
+## Features
+* Query
 * Scopes
 * Bulk update and delete
-* `belongsTo`, `belongsToMany` and `hasMany` relations
+* Support `belongsTo`, `belongsToMany` and `hasMany` relations (lazy)
