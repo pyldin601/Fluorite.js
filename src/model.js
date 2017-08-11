@@ -28,7 +28,9 @@ export default (knex) => class Model {
   }
 
   hasMany(relatedClass, foreignKey, foreignKeyTarget) {
-    return new Query(relatedClass).filter({ [foreignKey]: this.get(foreignKeyTarget) })
+    const fk = foreignKey || `${relatedClass.name.toLowerCase()}_id`;
+    const fkt = foreignKeyTarget || this.constructor.idAttribute;
+    return new Query(relatedClass).filter({ [fk]: this.get(fkt) });
   }
 
   toJSON() {
