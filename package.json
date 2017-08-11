@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "jest --verbose",
+    "cover": "jest --coverage && (cat ./coverage/lcov.info | coveralls)",
     "build": "NODE_ENV=production babel src --out-dir dist --source-maps inline",
     "prepublish": "npm run build"
   },
@@ -16,6 +17,7 @@
     "babel-plugin-transform-builtin-extend": "*",
     "babel-preset-env": "*",
     "babel-preset-stage-0": "*",
+    "coveralls": "^2.13.1",
     "jest": "^20",
     "sqlite3": "*"
   },
