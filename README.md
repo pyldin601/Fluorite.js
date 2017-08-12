@@ -11,3 +11,8 @@ Lightweight ORM based on Knex.js query builder.
 * Scopes
 * Bulk update and delete
 * Support `belongsTo`, `belongsToMany` and `hasMany` relations (lazy)
+
+## API
+Fluorite is under active development.
+Readme will be later.
+For usage details see tests.
