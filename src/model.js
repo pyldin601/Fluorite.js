@@ -156,12 +156,12 @@ export default knex => class Model {
   }
 
   static find(id) {
-    return this.models()
+    return this.models
       .filter({ [this.idAttribute]: id })
       .fetchOne();
   }
 
-  static models() {
+  static get models() {
     const query = new Query(this);
     return new Proxy(query, {
       get(target, property) {
@@ -180,18 +180,18 @@ export default knex => class Model {
   }
 
   static filter(attributes) {
-    return this.models().filter(attributes);
+    return this.models.filter(attributes);
   }
 
   static fetchAll() {
-    return this.models().fetchAll();
+    return this.models.fetchAll();
   }
 
   static fetchOne() {
-    return this.models().fetchOne();
+    return this.models.fetchOne();
   }
 
   static count() {
-    return this.models().count();
+    return this.models.count();
   }
 };

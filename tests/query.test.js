@@ -29,7 +29,7 @@ describe('Query Tests', () => {
   });
 
   it('Should fetch with offsets', async () => {
-    const foos = await Foo.models().offset(1).fetchAll();
+    const foos = await Foo.models.offset(1).fetchAll();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 72, id: 2, name: 'Bob Marley' },
@@ -38,7 +38,7 @@ describe('Query Tests', () => {
   });
 
   it('Should fetch with limits and offsets', async () => {
-    const foos = await Foo.models()
+    const foos = await Foo.models
       .limit(1)
       .offset(1)
       .fetchAll();
@@ -65,32 +65,32 @@ describe('Query Tests', () => {
   });
 
   it('Test Count', async () => {
-    const count = await Foo.models().filter({ id__gt: 1 }).count();
+    const count = await Foo.models.filter({ id__gt: 1 }).count();
     expect(count).toBe(2);
   });
 
   it('Test Max', async () => {
-    const max = await Foo.models().max('age');
+    const max = await Foo.models.max('age');
     expect(max).toBe(72);
   });
 
   it('Test Min', async () => {
-    const min = await Foo.models().min('age');
+    const min = await Foo.models.min('age');
     expect(min).toBe(12);
   });
 
   it('Test Sum', async () => {
-    const sum = await Foo.models().sum('age');
+    const sum = await Foo.models.sum('age');
     expect(sum).toBe(130);
   });
 
   it('Test Average', async () => {
-    const avg = await Foo.models().avg('age').then(Math.floor);
+    const avg = await Foo.models.avg('age').then(Math.floor);
     expect(avg).toBe(43);
   });
 
   it('Bulk Update', async () => {
-    await Foo.models().update({ age: 20 });
+    await Foo.models.update({ age: 20 });
     const count = await Foo.filter({ age__eq: 20 }).count();
     expect(count).toBe(3);
   });

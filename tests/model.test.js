@@ -67,7 +67,7 @@ describe('Model tests', () => {
   });
 
   it('Test max aggregation', async () => {
-    const maxAge = await Foo.models().max('age');
+    const maxAge = await Foo.models.max('age');
     expect(maxAge).toBe(72);
   });
 
@@ -82,7 +82,7 @@ describe('Model tests', () => {
   });
 
   it('Test clone', async () => {
-    const qb1 = Foo.models();
+    const qb1 = Foo.models;
     const qb2 = qb1.clone().filter({ age__gt: 18 });
     expect(await qb2.count()).toBe(2);
     expect(await qb1.count()).toBe(3);
@@ -132,13 +132,13 @@ describe('Model tests', () => {
   ));
 
   it('Test scope functionality', async () => {
-    const foo1 = await Foo.models().first().fetchAll();
+    const foo1 = await Foo.models.first().fetchAll();
     expect(foo1.length).toBe(1);
 
-    const foo2 = await Foo.models().last(2).fetchAll();
+    const foo2 = await Foo.models.last(2).fetchAll();
     expect(first(foo2).id).toBe(3);
     expect(foo2.length).toBe(2);
 
-    expect(() => Foo.models().bar()).toThrow(TypeError);
+    expect(() => Foo.models.bar()).toThrow(TypeError);
   });
 });
