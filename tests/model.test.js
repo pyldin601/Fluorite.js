@@ -39,7 +39,7 @@ describe('Model tests', () => {
     try {
       await Foo.find(10);
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError)
+      expect(e).toBeInstanceOf(NotFoundError);
       expect(e.message).toBe('Entity not found');
     }
   });
