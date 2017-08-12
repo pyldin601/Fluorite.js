@@ -45,7 +45,7 @@ describe('Model tests', () => {
   });
 
   it('Test serialization', async () => {
-    const foos = await Foo.models.fetchAll();
+    const foos = await Foo.models.all();
     const json = foos.map(foo => foo.toJSON());
     expect(json).toEqual(
       [
@@ -57,12 +57,12 @@ describe('Model tests', () => {
   });
 
   it('Test filter "eq"', async () => {
-    const foos = await Foo.models.filter({ age__eq: 12 }).fetchAll();
+    const foos = await Foo.models.filter({ age__eq: 12 }).all();
     expect(foos.length).toBe(1);
   });
 
   it('Test filter "gt"', async () => {
-    const foos = await Foo.models.filter({ age__gt: 18 }).fetchAll();
+    const foos = await Foo.models.filter({ age__gt: 18 }).all();
     expect(foos.length).toBe(2);
   });
 
@@ -89,7 +89,7 @@ describe('Model tests', () => {
   });
 
   it('Fetch One', async () => {
-    const foo = await Foo.models.fetchOne();
+    const foo = await Foo.models.one();
     expect(foo).toBeInstanceOf(Foo);
   });
 
@@ -132,10 +132,10 @@ describe('Model tests', () => {
   ));
 
   it('Test scopes functionality', async () => {
-    const foo1 = await Foo.models.first().fetchAll();
+    const foo1 = await Foo.models.first().all();
     expect(foo1.length).toBe(1);
 
-    const foo2 = await Foo.models.last(2).fetchAll();
+    const foo2 = await Foo.models.last(2).all();
     expect(first(foo2).id).toBe(3);
     expect(foo2.length).toBe(2);
 

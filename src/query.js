@@ -45,24 +45,7 @@ export default class Query {
   }
 
   filter(attributes) {
-    return new Query(
-      this.modelClass,
-      createUniqueQuery(this.knexQuery, q => filter(q, attributes)),
-    );
-  }
-
-  limit(number) {
-    return new Query(
-      this.modelClass,
-      createUniqueQuery(this.knexQuery, q => q.limit(number)),
-    );
-  }
-
-  offset(number) {
-    return new Query(
-      this.modelClass,
-      createUniqueQuery(this.knexQuery, q => q.offset(number)),
-    );
+    return this.query(q => filter(q, attributes));
   }
 
   query(callback) {
@@ -72,21 +55,29 @@ export default class Query {
     );
   }
 
+  limit(number) {
+    return this.query(q => q.limit(number));
+  }
+
+  offset(number) {
+    return this.query(q => q.offset(number));
+  }
+
   async get(id) {
-    return this.filter({ [this.modelClass.idAttribute]: id }).fetchOne();
+    return this.filter({ [this.modelClass.idAttribute]: id }).one();
   }
 
-  async fetchOne() {
-    const row = await this.knexQuery.first();
-
-    if (!row) {
-      throw new NotFoundError('Entity not found');
-    }
-
-    return wrap(row, this.modelClass);
+  one() {
+    return this.knexQuery.first()
+      .then((row) => {
+        if (!row) {
+          throw new NotFoundError('Entity not found');
+        }
+        return wrap(row, this.modelClass);
+      });
   }
 
-  fetchAll() {
+  all() {
     return this.knexQuery
       .select()
       .then(rows => rows.map(row => wrap(row, this.modelClass)));
@@ -96,12 +87,12 @@ export default class Query {
     return this.knexQuery.pluck(column);
   }
 
-  update(attributes) {
-    return this.knexQuery.update(attributes);
+  async update(attributes) {
+    await this.knexQuery.update(attributes);
   }
 
-  remove() {
-    return this.knexQuery.delete();
+  async remove() {
+    await this.knexQuery.delete();
   }
 
   count(column = null) {

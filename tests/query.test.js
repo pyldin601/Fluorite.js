@@ -19,7 +19,7 @@ afterEach(async () => {
 
 describe('Query Tests', () => {
   it('Should fetch all', async () => {
-    const foos = await Foo.models.fetchAll();
+    const foos = await Foo.models.all();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 46, id: 1, name: 'John Doe' },
@@ -29,7 +29,7 @@ describe('Query Tests', () => {
   });
 
   it('Should fetch with offsets', async () => {
-    const foos = await Foo.models.offset(1).fetchAll();
+    const foos = await Foo.models.offset(1).all();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 72, id: 2, name: 'Bob Marley' },
@@ -41,7 +41,7 @@ describe('Query Tests', () => {
     const foos = await Foo.models
       .limit(1)
       .offset(1)
-      .fetchAll();
+      .all();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 72, id: 2, name: 'Bob Marley' },
@@ -49,7 +49,7 @@ describe('Query Tests', () => {
   });
 
   it('Test simple filter', async () => {
-    const foos = await Foo.models.filter({ id__eq: 1 }).fetchAll();
+    const foos = await Foo.models.filter({ id__eq: 1 }).all();
     expect(foos.length).toBe(1);
   });
 

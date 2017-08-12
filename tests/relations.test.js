@@ -62,7 +62,7 @@ describe('Test relations', () => {
 
     expect(user).toBeInstanceOf(User);
 
-    const things = await user.things().fetchAll();
+    const things = await user.things().all();
 
     expect(JSON.stringify(things)).toBe(
       '[{"id":1,"name":"Thing #1","user_id":1},{"id":2,"name":"Thing #2","user_id":1}]',
@@ -70,7 +70,7 @@ describe('Test relations', () => {
   });
   it('Test hasMany relation #2', async () => {
     const user = await User.models.get(2);
-    const things = await user.things().fetchAll();
+    const things = await user.things().all();
 
     expect(JSON.stringify(things)).toBe(
       '[{"id":3,"name":"Thing #3","user_id":2}]',
@@ -78,21 +78,21 @@ describe('Test relations', () => {
   });
   it('Test hasMany relation #3', async () => {
     const user = await User.models.get(3);
-    const things = await user.things().fetchAll();
+    const things = await user.things().all();
 
     expect(things.length).toBe(0);
   });
 
   it('Test belongsTo relation #1', async () => {
     const thing = await Thing.models.get(3);
-    const user = await thing.user().fetchOne();
+    const user = await thing.user().one();
 
     expect(user.id).toBe(2);
   });
 
   it('Test belongsToMany relation #1', async () => {
     const user = await User.models.get(1);
-    const addresses = await user.addresses().fetchAll();
+    const addresses = await user.addresses().all();
 
     expect(JSON.stringify(addresses)).toBe(
       '[{"id":1,"street":"Kutuzova","building":"2","flat":"52"},' +
@@ -103,7 +103,7 @@ describe('Test relations', () => {
 
   it('Test belongsToMany relation #2', async () => {
     const user = await User.models.get(2);
-    const addresses = await user.addresses().fetchAll();
+    const addresses = await user.addresses().all();
 
     expect(JSON.stringify(addresses)).toBe(
       '[{"id":1,"street":"Kutuzova","building":"2","flat":"52"},' +
@@ -113,14 +113,14 @@ describe('Test relations', () => {
 
   it('Test belongsToMany relation #3', async () => {
     const user = await User.models.get(3);
-    const addresses = await user.addresses().fetchAll();
+    const addresses = await user.addresses().all();
 
     expect(addresses.length).toBe(0);
   });
 
   it('Test belongsToMany relation #4', async () => {
     const address = await Address.models.get(1);
-    const users = await address.users().fetchAll();
+    const users = await address.users().all();
 
     expect(JSON.stringify(users)).toBe(
       '[{"id":1,"name":"John Doe"},{"id":2,"name":"Bob Marley"}]',
