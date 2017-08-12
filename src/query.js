@@ -72,6 +72,10 @@ export default class Query {
     );
   }
 
+  async get(id) {
+    return this.filter({ [this.modelClass.idAttribute]: id }).fetchOne();
+  }
+
   async fetchOne() {
     const row = await this.knexQuery.first();
 

@@ -155,12 +155,6 @@ export default knex => class Model {
     return this.serialize();
   }
 
-  static find(id) {
-    return this.models
-      .filter({ [this.idAttribute]: id })
-      .fetchOne();
-  }
-
   static get models() {
     const query = new Query(this);
     return new Proxy(query, {

@@ -28,7 +28,7 @@ describe('Model tests', () => {
   });
 
   it('Test find by id (if exists)', async () => {
-    const foo1 = await Foo.find(1);
+    const foo1 = await Foo.models.get(1);
     expect(foo1.attributes).toEqual({ id: 1, name: 'John Doe', age: 46 });
     expect(foo1.id).toBe(1);
     expect(foo1.get('name')).toBe('John Doe');
@@ -37,7 +37,7 @@ describe('Model tests', () => {
   it('Test find by id (if not exists)', async () => {
     expect.assertions(2);
     try {
-      await Foo.find(10);
+      await Foo.models.get(10);
     } catch (e) {
       expect(e).toBeInstanceOf(NotFoundError);
       expect(e.message).toBe('Entity not found');
@@ -104,7 +104,7 @@ describe('Model tests', () => {
   });
 
   it('Update entity', async () => {
-    const foo = await Foo.find(1);
+    const foo = await Foo.models.get(1);
     foo.set('name', 'Other Guy');
     foo.set({
       name: 'Other Guy',
@@ -114,16 +114,16 @@ describe('Model tests', () => {
     // Do not update if nothing to update
     await foo.save();
 
-    const updatedFoo = await Foo.find(1);
+    const updatedFoo = await Foo.models.get(1);
     expect(updatedFoo.get('name')).toBe('Other Guy');
   });
 
   it('Delete entity', async () => {
-    const foo = await Foo.find(1);
+    const foo = await Foo.models.get(1);
 
     await foo.remove();
 
-    return expect(Foo.find(1)).rejects.toBeInstanceOf(NotFoundError);
+    return expect(Foo.models.get(1)).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('Fail if deleting new entity', () => (
