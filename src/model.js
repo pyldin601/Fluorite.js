@@ -34,6 +34,10 @@ export default knex => class Model {
     return knex;
   }
 
+  static create(attrs) {
+    return new this(attrs);
+  }
+
   constructor(attributes, storedAttributes = {}) {
     this.attributes = attributes;
     this.storedAttributes = storedAttributes;
@@ -152,12 +156,12 @@ export default knex => class Model {
   }
 
   static find(id) {
-    return this.query()
+    return this.models()
       .filter({ [this.idAttribute]: id })
       .fetchOne();
   }
 
-  static query() {
+  static models() {
     const query = new Query(this);
     return new Proxy(query, {
       get(target, property) {
@@ -176,18 +180,18 @@ export default knex => class Model {
   }
 
   static filter(attributes) {
-    return this.query().filter(attributes);
+    return this.models().filter(attributes);
   }
 
   static fetchAll() {
-    return this.query().fetchAll();
+    return this.models().fetchAll();
   }
 
   static fetchOne() {
-    return this.query().fetchOne();
+    return this.models().fetchOne();
   }
 
   static count() {
-    return this.query().count();
+    return this.models().count();
   }
 };
