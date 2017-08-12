@@ -44,4 +44,13 @@ describe('Transactions', () => {
       await user.posts().update({ title: 'New Title' });
     });
   });
+
+  it('Return value from transaction', async () => {
+    const posts = await fluorite.transaction(async () => {
+      const user = await User.models.get(1);
+      await user.posts().update({ title: 'New Title' });
+      return user.posts().all();
+    });
+    expect(posts).toBeInstanceOf(Array);
+  });
 });
