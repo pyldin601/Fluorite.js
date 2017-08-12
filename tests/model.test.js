@@ -132,5 +132,7 @@ describe('Model tests', () => {
     const foo2 = await Foo.query().last(2).fetchAll();
     expect(first(foo2).id).toBe(3);
     expect(foo2.length).toBe(2);
+
+    expect(() => Foo.query().bar()).toThrow(TypeError);
   });
 });

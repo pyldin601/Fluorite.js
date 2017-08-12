@@ -1,5 +1,6 @@
 import knex from './services/knex';
 import User from './models/User';
+import Address from './models/Address';
 import Thing from './models/Thing';
 
 beforeEach(async () => {
@@ -115,5 +116,14 @@ describe('Test relations', () => {
     const addresses = await user.addresses().fetchAll();
 
     expect(addresses.length).toBe(0);
+  });
+
+  it('Test belongsToMany relation #4', async () => {
+    const address = await Address.find(1);
+    const users = await address.users().fetchAll();
+
+    expect(JSON.stringify(users)).toBe(
+      '[{"id":1,"name":"John Doe"},{"id":2,"name":"Bob Marley"}]',
+    );
   });
 });

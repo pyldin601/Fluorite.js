@@ -48,6 +48,22 @@ describe('Query Tests', () => {
     ]);
   });
 
+  it('Test simple filter', async () => {
+    const foos = await Foo.filter({ 'id__eq': 1 }).fetchAll();
+    expect(foos.length).toBe(1);
+  });
+
+  it('Test wrong operator', () => {
+    expect(() => Foo.filter({ 'id__foo': 1 })).toThrow(TypeError);
+  });
+
+
+  it('Test IN filter', async () => {
+    const query = Foo.filter({ 'id__in': [1, 2] });
+    const foos = await query.pluck('id');
+    expect(foos).toEqual([1, 2]);
+  });
+
   it('Test Count', async () => {
     const count = await Foo.query().filter({ 'id__gt': 1 }).count();
     expect(count).toBe(2);

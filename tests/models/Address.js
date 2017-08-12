@@ -4,7 +4,7 @@ import fluorite from '../services/fluorite';
 export default class Address extends fluorite.Model {
   static table = 'addresses';
 
-  user() {
+  users() {
     return this.belongsToMany(User);
   }
 }
