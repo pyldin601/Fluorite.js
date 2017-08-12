@@ -19,7 +19,7 @@ afterEach(async () => {
 
 describe('Query Tests', () => {
   it('Should fetch all', async () => {
-    const foos = await Foo.fetchAll();
+    const foos = await Foo.models.fetchAll();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 46, id: 1, name: 'John Doe' },
@@ -49,17 +49,17 @@ describe('Query Tests', () => {
   });
 
   it('Test simple filter', async () => {
-    const foos = await Foo.filter({ id__eq: 1 }).fetchAll();
+    const foos = await Foo.models.filter({ id__eq: 1 }).fetchAll();
     expect(foos.length).toBe(1);
   });
 
   it('Test wrong operator', () => {
-    expect(() => Foo.filter({ id__foo: 1 })).toThrow(TypeError);
+    expect(() => Foo.models.filter({ id__foo: 1 })).toThrow(TypeError);
   });
 
 
   it('Test IN filter', async () => {
-    const query = Foo.filter({ id__in: [1, 2] });
+    const query = Foo.models.filter({ id__in: [1, 2] });
     const foos = await query.pluck('id');
     expect(foos).toEqual([1, 2]);
   });
@@ -91,18 +91,18 @@ describe('Query Tests', () => {
 
   it('Bulk Update', async () => {
     await Foo.models.update({ age: 20 });
-    const count = await Foo.filter({ age__eq: 20 }).count();
+    const count = await Foo.models.filter({ age__eq: 20 }).count();
     expect(count).toBe(3);
   });
 
   it('Bulk Delete', async () => {
-    await Foo.filter({ age__lt: 18 }).remove();
-    const count = await Foo.count();
+    await Foo.models.filter({ age__lt: 18 }).remove();
+    const count = await Foo.models.count();
     expect(count).toBe(2);
   });
 
   it('Pluck names', async () => {
-    const names = await Foo.filter({ age__gt: 18 }).pluck('name');
-    expect(JSON.stringify(names)).toBe('["John Doe","Bob Marley"]');
+    const names = await Foo.models.filter({ age__gt: 18 }).pluck('name');
+    expect(names).toEqual(['John Doe', 'Bob Marley']);
   });
 });

@@ -27,7 +27,7 @@ import { NotFoundError } from './error';
 export default knex => class Model {
   static table = null;
   static idAttribute = 'id';
-  static scope = {
+  static scopes = {
   };
 
   static get knex() {
@@ -169,29 +169,13 @@ export default knex => class Model {
           return target[property];
         }
 
-        if (property in target.modelClass.scope) {
-          const scope = target.modelClass.scope[property];
-          return (...args) => { scope(target, ...args); return target; };
+        if (property in target.modelClass.scopes) {
+          const scope = target.modelClass.scopes[property];
+          return (...args) => scope(target, ...args);
         }
 
         return undefined;
       },
     });
-  }
-
-  static filter(attributes) {
-    return this.models.filter(attributes);
-  }
-
-  static fetchAll() {
-    return this.models.fetchAll();
-  }
-
-  static fetchOne() {
-    return this.models.fetchOne();
-  }
-
-  static count() {
-    return this.models.count();
   }
 };

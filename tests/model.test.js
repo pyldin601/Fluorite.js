@@ -45,7 +45,7 @@ describe('Model tests', () => {
   });
 
   it('Test serialization', async () => {
-    const foos = await Foo.fetchAll();
+    const foos = await Foo.models.fetchAll();
     const json = foos.map(foo => foo.toJSON());
     expect(json).toEqual(
       [
@@ -57,12 +57,12 @@ describe('Model tests', () => {
   });
 
   it('Test filter "eq"', async () => {
-    const foos = await Foo.filter({ age__eq: 12 }).fetchAll();
+    const foos = await Foo.models.filter({ age__eq: 12 }).fetchAll();
     expect(foos.length).toBe(1);
   });
 
   it('Test filter "gt"', async () => {
-    const foos = await Foo.filter({ age__gt: 18 }).fetchAll();
+    const foos = await Foo.models.filter({ age__gt: 18 }).fetchAll();
     expect(foos.length).toBe(2);
   });
 
@@ -72,35 +72,35 @@ describe('Model tests', () => {
   });
 
   it('Test aggregation on empty collection', async () => {
-    const maxAge = await Foo.filter({ age__gt: 100 }).max('age');
+    const maxAge = await Foo.models.filter({ age__gt: 100 }).max('age');
     expect(maxAge).toBeNull();
   });
 
   it('Test count on empty collection', async () => {
-    const maxAge = await Foo.filter({ age__gt: 100 }).count();
+    const maxAge = await Foo.models.filter({ age__gt: 100 }).count();
     expect(maxAge).toBe(0);
   });
 
   it('Test clone', async () => {
     const qb1 = Foo.models;
-    const qb2 = qb1.clone().filter({ age__gt: 18 });
+    const qb2 = qb1.filter({ age__gt: 18 });
     expect(await qb2.count()).toBe(2);
     expect(await qb1.count()).toBe(3);
   });
 
   it('Fetch One', async () => {
-    const foo = await Foo.fetchOne();
+    const foo = await Foo.models.fetchOne();
     expect(foo).toBeInstanceOf(Foo);
   });
 
   it('Create entity', async () => {
     const foo = Foo.create({ name: 'Alan Davey', age: 42 });
     expect(foo.isNew).toBeTruthy();
-    expect(await Foo.filter({ name__eq: 'Alan Davey' }).count()).toBe(0);
+    expect(await Foo.models.filter({ name__eq: 'Alan Davey' }).count()).toBe(0);
 
     await foo.save();
     expect(foo.isNew).toBeFalsy();
-    expect(await Foo.filter({ name__eq: 'Alan Davey' }).count()).toBe(1);
+    expect(await Foo.models.filter({ name__eq: 'Alan Davey' }).count()).toBe(1);
   });
 
   it('Update entity', async () => {
@@ -131,7 +131,7 @@ describe('Model tests', () => {
       .rejects.toBeInstanceOf(NotFoundError)
   ));
 
-  it('Test scope functionality', async () => {
+  it('Test scopes functionality', async () => {
     const foo1 = await Foo.models.first().fetchAll();
     expect(foo1.length).toBe(1);
 

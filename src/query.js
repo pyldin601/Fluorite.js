@@ -31,31 +31,45 @@ const getValue = qb => (
 const wrap = (row, ModelClass) =>
   new ModelClass(row, Object.assign({}, row));
 
+const createUniqueQuery = (knexQuery, callback) => {
+  const newQuery = knexQuery.clone();
+  callback(newQuery);
+  return newQuery;
+};
+
 export default class Query {
-  constructor(modelClass) {
+  constructor(modelClass, knexQuery) {
     this.modelClass = modelClass;
     this.knexInstance = modelClass.knex;
-    this.knexQuery = this.knexInstance(modelClass.table);
+    this.knexQuery = knexQuery || this.knexInstance(modelClass.table);
   }
 
   filter(attributes) {
-    filter(this.knexQuery, attributes);
-    return this;
+    return new Query(
+      this.modelClass,
+      createUniqueQuery(this.knexQuery, q => filter(q, attributes)),
+    );
   }
 
   limit(number) {
-    this.knexQuery.limit(number);
-    return this;
+    return new Query(
+      this.modelClass,
+      createUniqueQuery(this.knexQuery, q => q.limit(number)),
+    );
   }
 
   offset(number) {
-    this.knexQuery.offset(number);
-    return this;
+    return new Query(
+      this.modelClass,
+      createUniqueQuery(this.knexQuery, q => q.offset(number)),
+    );
   }
 
   query(callback) {
-    callback(this.knexQuery);
-    return this;
+    return new Query(
+      this.modelClass,
+      createUniqueQuery(this.knexQuery, callback),
+    );
   }
 
   async fetchOne() {
@@ -104,11 +118,5 @@ export default class Query {
 
   avg(column) {
     return getValue(this.knexQuery.avg(column));
-  }
-
-  clone() {
-    const that = new this.constructor(this.modelClass);
-    that.knexQuery = this.knexQuery.clone();
-    return that;
   }
 }
