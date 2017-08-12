@@ -23,5 +23,4 @@
 export default {
   NotFoundError: class NotFoundError extends Error {},
   IntegrityError: class IntegrityError extends Error {},
-  NotTransactingError: class NotTransactingError extends Error {},
 };

@@ -21,30 +21,32 @@
  */
 
 import { last } from 'lodash';
-import errors from './errors';
 import model from './model';
-
 
 export default (knex) => {
   const transactions = [];
   const fluorite = ({
     knex,
     transaction(callback) {
-      knex.transaction(async (trx) => {
-        transactions.push(trx);
-        callback();
-        transactions.unshift(trx);
+      return knex.transaction(async (trx) => {
+        try {
+          transactions.push(trx);
+          return callback();
+        } finally {
+          transactions.unshift(trx);
+        }
       });
     },
     get isTransacting() {
       return transactions.length > 0;
     },
     get currentTransaction() {
-      if (!fluorite.isTransacting) {
-        throw new errors.NotTransactingError();
-      }
       return last(transactions);
     },
   });
-  return { Model: model(fluorite) };
+
+  return {
+    Model: model(fluorite),
+    transaction: fluorite.transaction,
+  };
 };
