@@ -7,7 +7,7 @@ beforeEach(async () => {
   await knex.schema.createTable('foo', (table) => {
     table.increments();
     table.string('name').unsigned().notNullable();
-    table.integer('age').unsigned().notNullable()
+    table.integer('age').unsigned().notNullable();
   });
 
   await knex('foo').insert({ name: 'John Doe', age: 46 });
