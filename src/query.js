@@ -36,13 +36,6 @@ const createUniqueQuery = (knexQuery, callback) => {
   return newQuery;
 };
 
-const transacting = (knexQuery, ModelClass) => {
-  if (ModelClass.fluorite.isTransacting) {
-    return knexQuery.transacting(ModelClass.fluorite.currentTransaction);
-  }
-  return knexQuery;
-};
-
 export default class Query {
   constructor(modelClass, knex = undefined) {
     this.modelClass = modelClass;
