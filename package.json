@@ -1,6 +1,6 @@
 {
   "name": "fluorite",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "ORM library",
   "main": "dist/index.js",
   "scripts": {

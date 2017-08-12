@@ -24,6 +24,7 @@ describe('Model tests', () => {
     const foo = new Foo({ id: 10, name: 'Bob Marley' });
     expect(foo.id).toBe(10);
     expect(foo.get('name')).toBe('Bob Marley');
+    expect(foo.isNew).toBeFalsy();
   });
 
   it('Test find by id (if exists)', async () => {
