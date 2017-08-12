@@ -22,7 +22,6 @@
 
 import { first } from 'lodash';
 import filter from './filter';
-import errors from './errors';
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
