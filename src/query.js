@@ -47,10 +47,6 @@ export default class Query {
     return this.query(q => filter(q, attributes));
   }
 
-  where(attributes) {
-    return this.query(q => q.where(attributes));
-  }
-
   query(callback) {
     return new Query(
       this.modelClass,
@@ -78,7 +74,7 @@ export default class Query {
 
   async getOrCreate(attributes, defaults = {}) {
     try {
-      return await this.where(attributes).one();
+      return await this.query(q => q.where(attributes)).one();
     } catch (e) {
       if (e instanceof this.modelClass.NotFoundError) {
         return this.create({ ...defaults, ...attributes });
