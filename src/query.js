@@ -22,6 +22,7 @@
 
 import { first } from 'lodash';
 import filter from './filter';
+import errors from './errors';
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
@@ -47,6 +48,10 @@ export default class Query {
     return this.query(q => filter(q, attributes));
   }
 
+  where(attributes) {
+    return this.query(q => q.where(attributes));
+  }
+
   query(callback) {
     return new Query(
       this.modelClass,
@@ -62,18 +67,35 @@ export default class Query {
     return this.query(q => q.offset(number));
   }
 
+  async create(attributes) {
+    const model = this.modelClass.create(attributes);
+    await model.save();
+    return model;
+  }
+
   async get(id) {
     return this.filter({ [this.modelClass.idAttribute]: id }).one();
   }
 
-  one() {
-    return this.knexQuery.first()
-      .then((row) => {
-        if (!row) {
-          throw new this.modelClass.NotFoundError('Entity not found');
-        }
-        return wrap(row, this.modelClass);
-      });
+  async getOrCreate(attributes, defaults = {}) {
+    try {
+      return await this.where(attributes).one();
+    } catch (e) {
+      if (e instanceof this.modelClass.NotFoundError) {
+        return this.create({ ...defaults, ...attributes });
+      }
+      throw e;
+    }
+  }
+
+  async one() {
+    const row = await this.knexQuery.first();
+
+    if (!row) {
+      throw new this.modelClass.NotFoundError('Entity not found');
+    }
+
+    return wrap(row, this.modelClass);
   }
 
   all() {

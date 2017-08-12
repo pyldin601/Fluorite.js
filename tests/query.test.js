@@ -14,7 +14,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await knex.schema.dropTable('foo');
+  await knex.schema.dropTableIfExists('foo');
 });
 
 describe('Query Tests', () => {
@@ -104,5 +104,19 @@ describe('Query Tests', () => {
   it('Pluck names', async () => {
     const names = await Foo.models.filter({ age__gt: 18 }).pluck('name');
     expect(names).toEqual(['John Doe', 'Bob Marley']);
+  });
+
+  it('Test getOrCreate method', async () => {
+    const user1 = await Foo.models.getOrCreate({ name: 'Bob Marley' }, { age: 66 });
+    expect(user1.get('age')).toBe(72);
+
+    const user2 = await Foo.models.getOrCreate({ name: 'Bill Gates' }, { age: 66 });
+    expect(user2.get('age')).toBe(66);
+  });
+
+  it('Test getOrCreate method with error', async () => {
+    await Foo.knex.schema.dropTable('foo');
+
+    return expect(Foo.models.getOrCreate({ foo: 'Bob Marley' }, { age: 66 })).rejects.toBeDefined();
   });
 });
