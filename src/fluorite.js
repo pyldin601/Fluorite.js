@@ -20,8 +20,31 @@
  * SOFTWARE.
  */
 
+import { last } from 'lodash';
+import errors from './errors';
 import model from './model';
 
-export default knex => ({
-  Model: model(knex),
-});
+
+export default (knex) => {
+  const transactions = [];
+  const fluorite = ({
+    knex,
+    transaction(callback) {
+      knex.transaction(async (trx) => {
+        transactions.push(trx);
+        callback();
+        transactions.unshift(trx);
+      });
+    },
+    get isTransacting() {
+      return transactions.length > 0;
+    },
+    get currentTransaction() {
+      if (!fluorite.isTransacting) {
+        throw new errors.NotTransactingError();
+      }
+      return last(transactions);
+    },
+  });
+  return { Model: model(fluorite) };
+};

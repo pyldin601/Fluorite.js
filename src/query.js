@@ -36,11 +36,26 @@ const createUniqueQuery = (knexQuery, callback) => {
   return newQuery;
 };
 
+const transacting = (knexQuery, ModelClass) => {
+  if (ModelClass.fluorite.isTransacting) {
+    return knexQuery.transacting(ModelClass.fluorite.currentTransaction);
+  }
+  return knexQuery;
+};
+
 export default class Query {
-  constructor(modelClass, knexQuery) {
+  constructor(modelClass, knex = undefined) {
     this.modelClass = modelClass;
-    this.knexInstance = modelClass.knex;
-    this.knexQuery = knexQuery || this.knexInstance(modelClass.table);
+    this.knexQuery = knex || modelClass.knex(modelClass.table);
+  }
+
+  get knexQueryTransacting() {
+    if (this.modelClass.fluorite.isTransacting) {
+      return this.knexQuery.clone().transacting(
+        this.modelClass.fluorite.currentTransaction,
+      );
+    }
+    return this.knexQuery;
   }
 
   filter(attributes) {
@@ -84,7 +99,7 @@ export default class Query {
   }
 
   async one() {
-    const row = await this.knexQuery.first();
+    const row = await this.knexQueryTransacting.first();
 
     if (!row) {
       throw new this.modelClass.NotFoundError('Entity not found');
@@ -94,40 +109,40 @@ export default class Query {
   }
 
   all() {
-    return this.knexQuery
+    return this.knexQueryTransacting
       .select()
       .then(rows => rows.map(row => wrap(row, this.modelClass)));
   }
 
   pluck(column) {
-    return this.knexQuery.pluck(column);
+    return this.knexQueryTransacting.pluck(column);
   }
 
   async update(attributes) {
-    await this.knexQuery.update(attributes);
+    await this.knexQueryTransacting.update(attributes);
   }
 
   async remove() {
-    await this.knexQuery.delete();
+    await this.knexQueryTransacting.delete();
   }
 
   count(column = null) {
-    return getValue(this.knexQuery.count(column));
+    return getValue(this.knexQueryTransacting.count(column));
   }
 
   min(column) {
-    return getValue(this.knexQuery.min(column));
+    return getValue(this.knexQueryTransacting.min(column));
   }
 
   max(column) {
-    return getValue(this.knexQuery.max(column));
+    return getValue(this.knexQueryTransacting.max(column));
   }
 
   sum(column) {
-    return getValue(this.knexQuery.sum(column));
+    return getValue(this.knexQueryTransacting.sum(column));
   }
 
   avg(column) {
-    return getValue(this.knexQuery.avg(column));
+    return getValue(this.knexQueryTransacting.avg(column));
   }
 }

@@ -24,7 +24,7 @@ import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
 import Query from './query';
 import errors from './errors';
 
-export default knex => class Model {
+export default fluorite => class Model {
   static NotFoundError = class NotFoundError extends errors.NotFoundError { };
 
   static table = null;
@@ -32,8 +32,12 @@ export default knex => class Model {
   static scopes = {
   };
 
+  static get fluorite() {
+    return fluorite;
+  }
+
   static get knex() {
-    return knex;
+    return this.fluorite.knex;
   }
 
   static create(attrs) {
@@ -65,6 +69,14 @@ export default knex => class Model {
     return isNil(this.id);
   }
 
+  createKnexQuery() {
+    const query = this.constructor.knex(this.constructor.table);
+    if (this.constructor.fluorite.isTransacting) {
+      query.transacting(this.constructor.fluorite.currentTransaction);
+    }
+    return query;
+  }
+
   get(name) {
     return this.attributes[name];
   }
@@ -88,15 +100,16 @@ export default knex => class Model {
       throw new this.constructor.NotFoundError('Can\'t remove new entity');
     }
 
-    return this.constructor.knex(this.constructor.table)
+    return this.createKnexQuery()
       .where(this.constructor.idAttribute, this.id)
       .delete();
   }
 
   async insert() {
-    const ids = await this.constructor
-      .knex(this.constructor.table)
-      .insert(this.attributesWithoutId, this.constructor.idAttribute);
+    const ids = await this.createKnexQuery().insert(
+      this.attributesWithoutId,
+      this.constructor.idAttribute,
+    );
     const lastId = last(ids);
     this.attributes[this.constructor.idAttribute] = lastId;
     this.storedAttributes = this.attributes;
@@ -108,8 +121,7 @@ export default knex => class Model {
     if (isEmpty(updatedAttributes)) {
       return;
     }
-    await this.constructor
-      .knex(this.constructor.table)
+    await this.createKnexQuery()
       .update(updatedAttributes)
       .where({ [this.constructor.idAttribute]: this.id });
     this.storedAttributes = this.attributes;
