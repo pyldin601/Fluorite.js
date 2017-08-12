@@ -24,12 +24,12 @@ import { first } from 'lodash';
 import { NotFoundError } from './';
 import filter from './filter';
 
-const getValue = (qb) => (
+const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
 );
 
-const wrap = (row, modelClass) =>
-  new modelClass(row, Object.assign({}, row));
+const wrap = (row, ModelClass) =>
+  new ModelClass(row, Object.assign({}, row));
 
 export default class Query {
   constructor(modelClass) {
@@ -111,4 +111,4 @@ export default class Query {
     that.knexQuery = this.knexQuery.clone();
     return that;
   }
-};
+}

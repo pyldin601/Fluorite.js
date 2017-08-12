@@ -24,7 +24,7 @@ import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
 import Query from './query';
 import { NotFoundError } from './error';
 
-export default (knex) => class Model {
+export default knex => class Model {
   static table = null;
   static idAttribute = 'id';
   static scope = {
@@ -44,15 +44,15 @@ export default (knex) => class Model {
   }
 
   get attributesWithoutId() {
-    return pickBy(this.attributes, (value, key) => {
-      return key !== this.constructor.idAttribute;
-    });
+    return pickBy(this.attributes, (value, key) => (
+      key !== this.constructor.idAttribute
+    ));
   }
 
   get updatedAttributes() {
-    return pickBy(this.attributesWithoutId, (value, key) => {
-      return value !== this.storedAttributes[key];
-    });
+    return pickBy(this.attributesWithoutId, (value, key) => (
+      value !== this.storedAttributes[key]
+    ));
   }
 
   get isNew() {
@@ -79,7 +79,7 @@ export default (knex) => class Model {
 
   async remove() {
     if (this.isNew) {
-      throw new NotFoundError(`Can't remove new entity`);
+      throw new NotFoundError('Can\'t remove new entity');
     }
 
     return this.constructor.knex(this.constructor.table)
@@ -160,19 +160,18 @@ export default (knex) => class Model {
   static query() {
     const query = new Query(this);
     return new Proxy(query, {
-      get(target, property, receiver) {
+      get(target, property) {
         if (property in target) {
           return target[property];
         }
 
         if (property in target.modelClass.scope) {
           const scope = target.modelClass.scope[property];
-          return (...args) => {
-            scope(target, ...args);
-            return target;
-          }
+          return (...args) => { scope(target, ...args); return target; };
         }
-      }
+
+        return undefined;
+      },
     });
   }
 

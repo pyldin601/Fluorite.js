@@ -12,3 +12,6 @@ parser: babel-eslint
 extends:
   - 'airbnb-base'
   - 'plugin:jest/recommended'
+
+rules:
+  'no-restricted-syntax': off

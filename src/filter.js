@@ -43,7 +43,7 @@ const getOperator = (name) => {
 export default (qb, attributes) => {
   for (const key of Object.keys(attributes)) {
     if (opRegExp.test(key)) {
-      const [ ,field, op] = opRegExp.exec(key);
+      const [, field, op] = opRegExp.exec(key);
       const operator = getOperator(op);
       if (operator === 'IN') {
         qb.whereIn(field, attributes[key]);

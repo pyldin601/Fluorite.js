@@ -22,6 +22,6 @@
 
 import model from './model';
 
-export default (knex) => ({
+export default knex => ({
   Model: model(knex),
 });

@@ -20,8 +20,6 @@
  * SOFTWARE.
  */
 
-export class NotFoundError extends Error {
-  constructor(message) {
-    super(message);
-  }
-}
+export class NotFoundError extends Error { }
+
+export default { NotFoundError };
