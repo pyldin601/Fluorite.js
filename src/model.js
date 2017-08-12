@@ -22,9 +22,10 @@
 
 import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
 import Query from './query';
-import { NotFoundError } from './error';
 
 export default knex => class Model {
+  static NotFoundError = class NotFoundError extends Error { };
+
   static table = null;
   static idAttribute = 'id';
   static scopes = {
@@ -83,7 +84,7 @@ export default knex => class Model {
 
   async remove() {
     if (this.isNew) {
-      throw new NotFoundError('Can\'t remove new entity');
+      throw new this.constructor.NotFoundError('Can\'t remove new entity');
     }
 
     return this.constructor.knex(this.constructor.table)

@@ -1,7 +1,6 @@
 import { first } from 'lodash';
 import knex from './services/knex';
 import Foo from './models/Foo';
-import { NotFoundError } from '../src';
 
 beforeEach(async () => {
   await knex.schema.createTable('foo', (table) => {
@@ -39,7 +38,7 @@ describe('Model tests', () => {
     try {
       await Foo.models.get(10);
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError);
+      expect(e).toBeInstanceOf(Foo.NotFoundError);
       expect(e.message).toBe('Entity not found');
     }
   });
@@ -123,12 +122,12 @@ describe('Model tests', () => {
 
     await foo.remove();
 
-    return expect(Foo.models.get(1)).rejects.toBeInstanceOf(NotFoundError);
+    return expect(Foo.models.get(1)).rejects.toBeInstanceOf(Foo.NotFoundError);
   });
 
   it('Fail if deleting new entity', () => (
     expect(Foo.create({ name: 'Abc', age: 10 }).remove())
-      .rejects.toBeInstanceOf(NotFoundError)
+      .rejects.toBeInstanceOf(Foo.NotFoundError)
   ));
 
   it('Test scopes functionality', async () => {

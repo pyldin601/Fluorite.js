@@ -21,7 +21,6 @@
  */
 
 import { first } from 'lodash';
-import { NotFoundError } from './';
 import filter from './filter';
 
 const getValue = qb => (
@@ -71,7 +70,7 @@ export default class Query {
     return this.knexQuery.first()
       .then((row) => {
         if (!row) {
-          throw new NotFoundError('Entity not found');
+          throw new this.modelClass.NotFoundError('Entity not found');
         }
         return wrap(row, this.modelClass);
       });
