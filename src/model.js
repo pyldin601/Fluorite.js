@@ -22,9 +22,10 @@
 
 import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
 import Query from './query';
+import errors from './errors';
 
 export default knex => class Model {
-  static NotFoundError = class NotFoundError extends Error { };
+  static NotFoundError = class NotFoundError extends errors.NotFoundError { };
 
   static table = null;
   static idAttribute = 'id';
