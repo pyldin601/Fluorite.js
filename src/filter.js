@@ -46,7 +46,7 @@ export default (qb, attributes) => {
       const [ ,field, op] = opRegExp.exec(key);
       const operator = getOperator(op);
       if (operator === 'IN') {
-        qb.whereIn(field, operator, attributes[key]);
+        qb.whereIn(field, attributes[key]);
       } else {
         qb.where(field, operator, attributes[key]);
       }
