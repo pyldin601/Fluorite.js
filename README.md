@@ -4,15 +4,40 @@
 [![Code Climate](https://codeclimate.com/github/pldin601/Fluorite.js/badges/gpa.svg)](https://codeclimate.com/github/pldin601/Fluorite.js)
 
 
-Lightweight ORM based on Knex.js query builder.
+Fluorite is a lightweight ORM based on Knex.js query builder.
+It features promise based interface, provides transactions support,
+bulk updating and deleting, and support for one-to-one, one-to-many and many-to-many relations.
 
-## Features
-* Transactions
-* Scopes
-* Bulk update and delete
-* Supports `belongsTo`, `belongsToMany` and `hasMany` relations (lazy)
+## Configuration
+First of all you need a copy of knex.js query builder to be configured.
 
-## API
-Fluorite is under active development.
-Readme will be later.
-For usage details see tests.
+```javascript
+const knex = require('knex')({
+  client: 'sqlite3',
+  connection: {
+    filename: ':memory:',
+  },
+}); 
+
+const fluorite = require('fluorite')(knex);
+
+class User extends fluorite.Model {
+  static table = 'users';
+  
+  posts() {
+    return this.hasMany(Post);
+  }
+}
+
+class Post extends fluorite.Model {
+  static table = 'posts';
+  
+  author() {
+    return this.belongsTo(User);
+  }
+}
+```
+
+You should use the `fluorite` instance returned throughout your library
+because it creates a connection pool for the current database and for
+transactions to work correctly.
