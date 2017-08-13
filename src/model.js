@@ -23,6 +23,7 @@
 import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
 import Query from './query';
 import errors from './errors';
+import { BelongsTo, BelongsToMany, HasMany } from './relations';
 
 export default fluorite => class Model {
   static NotFoundError = class NotFoundError extends errors.NotFoundError { };
@@ -132,15 +133,11 @@ export default fluorite => class Model {
   }
 
   hasMany(relatedClass, foreignKey, foreignKeyTarget) {
-    const fk = foreignKey || `${this.constructor.name.toLowerCase()}_id`;
-    const fkt = foreignKeyTarget || this.constructor.idAttribute;
-    return new Query(relatedClass).filter({ [fk]: this.get(fkt) });
+    return new HasMany(this, relatedClass, foreignKey, foreignKeyTarget);
   }
 
   belongsTo(relatedClass, foreignKey, foreignKeyTarget) {
-    const fk = foreignKey || `${relatedClass.name.toLowerCase()}_id`;
-    const fkt = foreignKeyTarget || relatedClass.idAttribute;
-    return new Query(relatedClass).filter({ [fkt]: this.get(fk) });
+    return new BelongsTo(this, relatedClass, foreignKey, foreignKeyTarget);
   }
 
   belongsToMany(
@@ -151,18 +148,15 @@ export default fluorite => class Model {
     thisForeignKeyTarget,
     thatForeignKeyTarget,
   ) {
-    const pivotTn = pivotTableName || sortBy([this.constructor.table, relatedClass.table]).join('_');
-    const thisFk = thisForeignKey || `${this.constructor.name.toLowerCase()}_id`;
-    const thatFk = thatForeignKey || `${relatedClass.name.toLowerCase()}_id`;
-    const thisFkt = thisForeignKeyTarget || this.constructor.idAttribute;
-    const thatFkt = thatForeignKeyTarget || relatedClass.idAttribute;
-
-    return new Query(relatedClass)
-      .query(q => q
-        .innerJoin(pivotTn, `${pivotTn}.${thatFk}`, `${relatedClass.table}.${thatFkt}`)
-        .select(`${relatedClass.table}.*`)
-        .where({ [`${pivotTn}.${thisFk}`]: this.get(thisFkt) }),
-      );
+    return new BelongsToMany(
+      this,
+      relatedClass,
+      pivotTableName,
+      thisForeignKey,
+      thatForeignKey,
+      thisForeignKeyTarget,
+      thatForeignKeyTarget,
+    );
   }
 
   toJSON() {
