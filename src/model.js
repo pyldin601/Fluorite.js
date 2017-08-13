@@ -163,7 +163,7 @@ export default fluorite => class Model {
     return this.serialize();
   }
 
-  static get models() {
+  static get objects() {
     return new Query(this);
   }
 };

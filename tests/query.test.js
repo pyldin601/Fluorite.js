@@ -19,7 +19,7 @@ afterEach(async () => {
 
 describe('Query Tests', () => {
   it('Should fetch all', async () => {
-    const foos = await Foo.models.all();
+    const foos = await Foo.objects.all();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 46, id: 1, name: 'John Doe' },
@@ -29,7 +29,7 @@ describe('Query Tests', () => {
   });
 
   it('Should fetch with offsets', async () => {
-    const foos = await Foo.models.offset(1).all();
+    const foos = await Foo.objects.offset(1).all();
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 72, id: 2, name: 'Bob Marley' },
@@ -38,7 +38,7 @@ describe('Query Tests', () => {
   });
 
   it('Should fetch with limits and offsets', async () => {
-    const foos = await Foo.models
+    const foos = await Foo.objects
       .limit(1)
       .offset(1)
       .all();
@@ -49,74 +49,74 @@ describe('Query Tests', () => {
   });
 
   it('Test simple filter', async () => {
-    const foos = await Foo.models.filter({ id__eq: 1 }).all();
+    const foos = await Foo.objects.filter({ id__eq: 1 }).all();
     expect(foos.length).toBe(1);
   });
 
   it('Test wrong operator', () => {
-    expect(() => Foo.models.filter({ id__foo: 1 })).toThrow(TypeError);
+    expect(() => Foo.objects.filter({ id__foo: 1 })).toThrow(TypeError);
   });
 
 
   it('Test IN filter', async () => {
-    const query = Foo.models.filter({ id__in: [1, 2] });
+    const query = Foo.objects.filter({ id__in: [1, 2] });
     const foos = await query.pluck('id');
     expect(foos).toEqual([1, 2]);
   });
 
   it('Test Count', async () => {
-    const count = await Foo.models.filter({ id__gt: 1 }).count();
+    const count = await Foo.objects.filter({ id__gt: 1 }).count();
     expect(count).toBe(2);
   });
 
   it('Test Max', async () => {
-    const max = await Foo.models.max('age');
+    const max = await Foo.objects.max('age');
     expect(max).toBe(72);
   });
 
   it('Test Min', async () => {
-    const min = await Foo.models.min('age');
+    const min = await Foo.objects.min('age');
     expect(min).toBe(12);
   });
 
   it('Test Sum', async () => {
-    const sum = await Foo.models.sum('age');
+    const sum = await Foo.objects.sum('age');
     expect(sum).toBe(130);
   });
 
   it('Test Average', async () => {
-    const avg = await Foo.models.avg('age').then(Math.floor);
+    const avg = await Foo.objects.avg('age').then(Math.floor);
     expect(avg).toBe(43);
   });
 
   it('Bulk Update', async () => {
-    await Foo.models.update({ age: 20 });
-    const count = await Foo.models.filter({ age__eq: 20 }).count();
+    await Foo.objects.update({ age: 20 });
+    const count = await Foo.objects.filter({ age__eq: 20 }).count();
     expect(count).toBe(3);
   });
 
   it('Bulk Delete', async () => {
-    await Foo.models.filter({ age__lt: 18 }).remove();
-    const count = await Foo.models.count();
+    await Foo.objects.filter({ age__lt: 18 }).remove();
+    const count = await Foo.objects.count();
     expect(count).toBe(2);
   });
 
   it('Pluck names', async () => {
-    const names = await Foo.models.filter({ age__gt: 18 }).pluck('name');
+    const names = await Foo.objects.filter({ age__gt: 18 }).pluck('name');
     expect(names).toEqual(['John Doe', 'Bob Marley']);
   });
 
   it('Test getOrCreate method', async () => {
-    const user1 = await Foo.models.getOrCreate({ name: 'Bob Marley' }, { age: 66 });
+    const user1 = await Foo.objects.getOrCreate({ name: 'Bob Marley' }, { age: 66 });
     expect(user1.get('age')).toBe(72);
 
-    const user2 = await Foo.models.getOrCreate({ name: 'Bill Gates' }, { age: 66 });
+    const user2 = await Foo.objects.getOrCreate({ name: 'Bill Gates' }, { age: 66 });
     expect(user2.get('age')).toBe(66);
   });
 
   it('Test getOrCreate method with error', async () => {
     await Foo.knex.schema.dropTable('foo');
 
-    return expect(Foo.models.getOrCreate({ foo: 'Bob Marley' }, { age: 66 })).rejects.toBeDefined();
+    return expect(Foo.objects.getOrCreate({ foo: 'Bob Marley' }, { age: 66 })).rejects.toBeDefined();
   });
 });
