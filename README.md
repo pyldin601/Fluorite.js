@@ -13,9 +13,9 @@ First of all you need a copy of knex.js query builder to be configured.
 
 ```javascript
 const knex = require('knex')({
-  client: './db.sqlite3',
+  client: 'sqlite3',
   connection: {
-    filename: ':memory:',
+    filename: './db.sqlite3',
   },
 }); 
 
