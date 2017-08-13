@@ -107,13 +107,17 @@ export default class Query {
   }
 
   async one() {
-    const row = await this.knexQueryTransacting.first();
+    const rows = await this.knexQueryTransacting.select();
 
-    if (!row) {
+    if (rows.length === 0) {
       throw new this.modelClass.NotFoundError('Entity not found');
     }
 
-    return wrap(row, this.modelClass);
+    if (rows.length > 1) {
+      throw new this.modelClass.IntegrityError('More than one entity returned');
+    }
+
+    return wrap(first(rows), this.modelClass);
   }
 
   all() {

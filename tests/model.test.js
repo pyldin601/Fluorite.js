@@ -88,9 +88,15 @@ describe('Model tests', () => {
   });
 
   it('Fetch One', async () => {
-    const foo = await Foo.objects.one();
+    const foo = await Foo.objects.limit(1).one();
     expect(foo).toBeInstanceOf(Foo);
   });
+
+  it('Fetch One (integrity error)', () => {
+    const foo = Foo.objects.one();
+    return expect(foo).rejects.toBeInstanceOf(Foo.IntegrityError);
+  });
+
 
   it('Create entity', async () => {
     const foo = Foo.create({ name: 'Alan Davey', age: 42 });

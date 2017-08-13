@@ -27,6 +27,7 @@ import { BelongsTo, BelongsToMany, HasMany } from './relations';
 
 export default fluorite => class Model {
   static NotFoundError = class NotFoundError extends errors.NotFoundError { };
+  static IntegrityError = class IntegrityError extends errors.IntegrityError { };
 
   static table = null;
   static idAttribute = 'id';
