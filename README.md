@@ -13,7 +13,7 @@ First of all you need a copy of knex.js query builder to be configured.
 
 ```javascript
 const knex = require('knex')({
-  client: 'sqlite3',
+  client: './db.sqlite3',
   connection: {
     filename: ':memory:',
   },
