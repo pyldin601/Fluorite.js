@@ -1,5 +1,5 @@
-import Query from './query';
 import { sortBy } from 'lodash';
+import Query from './query';
 
 export class BelongsTo extends Query {
   constructor(sourceEntity, relatedClass, foreignKey, foreignKeyTarget) {

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
+import { pickBy, isNil, last, isEmpty } from 'lodash';
 import Query from './query';
 import errors from './errors';
 import { BelongsTo, BelongsToMany, HasMany } from './relations';
