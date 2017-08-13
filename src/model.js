@@ -170,20 +170,6 @@ export default fluorite => class Model {
   }
 
   static get models() {
-    const query = new Query(this);
-    return new Proxy(query, {
-      get(target, property) {
-        if (property in target) {
-          return target[property];
-        }
-
-        if (property in target.modelClass.scopes) {
-          const scope = target.modelClass.scopes[property];
-          return (...args) => scope(target, ...args);
-        }
-
-        return undefined;
-      },
-    });
+    return new Query(this);
   }
 };

@@ -40,6 +40,21 @@ export default class Query {
   constructor(modelClass, knex = undefined) {
     this.modelClass = modelClass;
     this.knexQuery = knex || modelClass.knex(modelClass.table);
+
+    return new Proxy(this, {
+      get(target, property) {
+        if (property in target) {
+          return target[property];
+        }
+
+        if (property in target.modelClass.scopes) {
+          const scope = target.modelClass.scopes[property];
+          return (...args) => scope(target, ...args);
+        }
+
+        return undefined;
+      },
+    });
   }
 
   get knexQueryTransacting() {
