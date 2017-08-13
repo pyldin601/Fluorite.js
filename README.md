@@ -41,3 +41,36 @@ class Post extends fluorite.Model {
 You should use the `fluorite` instance returned throughout your library
 because it creates a connection pool for the current database and for
 transactions to work correctly.
+
+## Examples
+Get entity by it's primary key:
+```javascript
+const user = await User.models.get(1);
+```
+It will return instance of the `User` model. 
+If entity not found, it'll throw an `User.NotFoundError` exception.
+
+Get all entities:
+```javascript
+const users = await User.models.all();
+```
+
+Get first entity:
+```javascript
+const users = await User.models.one();
+```
+
+Get filtered entities:
+```javascript
+const adults = await User.models.filter({ 'age__gte': 18 }).all();
+```
+
+Each filtering methods (`filter`, `query`, `offset`, `limit`) are immutable.
+```javascript
+const all = Users.models;
+const adults = all.filter({ 'age__gte': 18 });
+const males = adults.filter({ 'gender__eq': 'male' });
+
+const firstMales = males.limit(5);
+const next5Males = males.offset(5).limit(5);
+```
