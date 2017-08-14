@@ -30,7 +30,7 @@ export default (knex) => {
       return knex.transaction(async (trx) => {
         try {
           transactions.push(trx);
-          return callback();
+          return await callback();
         } finally {
           transactions.unshift(trx);
         }
