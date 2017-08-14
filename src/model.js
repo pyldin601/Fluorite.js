@@ -73,8 +73,8 @@ export default fluorite => class Model {
 
   createKnexQuery() {
     const query = this.constructor.knex(this.constructor.table);
-    if (this.constructor.fluorite.isTransacting) {
-      query.transacting(this.constructor.fluorite.currentTransaction);
+    if (this.constructor.fluorite.transaction.isTransacting) {
+      query.transacting(this.constructor.fluorite.transaction.currentTransaction);
     }
     return query;
   }

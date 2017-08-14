@@ -58,9 +58,9 @@ export default class Query {
   }
 
   get knexQueryTransacting() {
-    if (this.modelClass.fluorite.isTransacting) {
+    if (this.modelClass.fluorite.transaction.isTransacting) {
       return this.knexQuery.clone().transacting(
-        this.modelClass.fluorite.currentTransaction,
+        this.modelClass.fluorite.transaction.currentTransaction,
       );
     }
     return this.knexQuery;

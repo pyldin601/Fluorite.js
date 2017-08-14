@@ -20,33 +20,17 @@
  * SOFTWARE.
  */
 
-import { last } from 'lodash';
 import model from './model';
+import transaction from './transaction';
 
 export default (knex) => {
-  const transactions = [];
-  const fluorite = ({
+  const fluoriteAttributes = ({
     knex,
-    transaction(callback) {
-      return knex.transaction(async (trx) => {
-        try {
-          transactions.push(trx);
-          return callback();
-        } finally {
-          transactions.unshift(trx);
-        }
-      });
-    },
-    get isTransacting() {
-      return transactions.length > 0;
-    },
-    get currentTransaction() {
-      return last(transactions);
-    },
+    transaction: transaction(knex),
   });
 
   return {
-    Model: model(fluorite),
-    transaction: fluorite.transaction,
+    Model: model(fluoriteAttributes),
+    transaction: fluoriteAttributes.transaction.transaction,
   };
 };
