@@ -46,9 +46,9 @@ export default fluorite => class Model {
     return new this(attrs);
   }
 
-  constructor(attributes, storedAttributes = {}) {
+  constructor(attributes, previousAttributes = {}) {
     this.attributes = attributes;
-    this.storedAttributes = storedAttributes;
+    this.previousAttributes = previousAttributes;
   }
 
   get id() {
@@ -63,7 +63,7 @@ export default fluorite => class Model {
 
   get updatedAttributes() {
     return pickBy(this.attributesWithoutId, (value, key) => (
-      value !== this.storedAttributes[key]
+      value !== this.previousAttributes[key]
     ));
   }
 
@@ -114,7 +114,7 @@ export default fluorite => class Model {
     );
     const lastId = last(ids);
     this.attributes[this.constructor.idAttribute] = lastId;
-    this.storedAttributes = this.attributes;
+    this.previousAttributes = this.attributes;
     return lastId;
   }
 
@@ -126,7 +126,7 @@ export default fluorite => class Model {
     await this.createKnexQuery()
       .update(updatedAttributes)
       .where({ [this.constructor.idAttribute]: this.id });
-    this.storedAttributes = this.attributes;
+    this.previousAttributes = this.attributes;
   }
 
   serialize() {
