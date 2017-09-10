@@ -40,7 +40,7 @@ const getOperator = (name) => {
   return ops[name];
 };
 
-export default (qb, attributes) => {
+export default attributes => (qb) => {
   for (const key of Object.keys(attributes)) {
     if (opRegExp.test(key)) {
       const [, field, op] = opRegExp.exec(key);

@@ -59,7 +59,7 @@ class BaseQuery {
   }
 
   filter(attributes) {
-    return this.query(q => filter(q, attributes));
+    return this.query(filter(attributes));
   }
 
   query(callback) {
@@ -85,19 +85,23 @@ class BaseQuery {
   }
 
   async update(attributes) {
-    await this.knexQueryTransacting.update(attributes);
+    await this.prepareQuery().update(attributes);
   }
 
   async remove() {
-    await this.knexQueryTransacting.delete();
+    await this.prepareQuery().delete();
+  }
+
+  async then(resolve, reject) {
+    try {
+      resolve(await this.eval());
+    } catch (e) {
+      reject(e);
+    }
   }
 }
 
 export class SingleRowQuery extends BaseQuery {
-  async then(resolve, reject) {
-    return this.eval().then(resolve, reject);
-  }
-
   eval() {
     const fluorite = this.modelClass.fluorite;
     return this
@@ -118,10 +122,6 @@ export class SingleRowQuery extends BaseQuery {
 }
 
 export class MultipleRowsQuery extends BaseQuery {
-  async then(resolve, reject) {
-    return this.eval().then(resolve, reject);
-  }
-
   count(column = null) {
     return getValue(this.prepareQuery().count(column));
   }

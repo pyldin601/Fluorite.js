@@ -52,10 +52,14 @@ describe('Query Tests', () => {
     expect(foos.length).toBe(1);
   });
 
-  it('Test wrong operator', () => {
-    expect(() => Foo.objects.filter({ id__foo: 1 })).toThrow(TypeError);
+  it('Test wrong operator', async () => {
+    expect.assertions(1);
+    try {
+      await Foo.objects.filter({ id__foo: 1 });
+    } catch (e) {
+      expect(e).toBeInstanceOf(TypeError);
+    }
   });
-
 
   it('Test IN filter', async () => {
     const query = Foo.objects.filter({ id__in: [1, 2] });
