@@ -26,9 +26,9 @@ export default (knex) => {
   const fluoriteAttributes = ({
     knex,
     transaction: transaction(knex),
-    wrapModel: (rowData, ModelClass) => {
-      return new ModelClass(rowData, Object.assign({}, rowData));
-    },
+    wrapModel: (rowData, ModelClass) => (
+      new ModelClass(rowData, Object.assign({}, rowData))
+    ),
   });
 
   return {

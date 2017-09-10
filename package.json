@@ -26,6 +26,7 @@
     "coveralls": "*",
     "eslint": "*",
     "eslint-config-airbnb-base": "*",
+    "eslint-plugin-babel": "^4.1.2",
     "eslint-plugin-import": "*",
     "eslint-plugin-jest": "^20",
     "jest": "^20",

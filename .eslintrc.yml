@@ -2,6 +2,7 @@
 
 plugins:
   - jest
+  - babel
 
 env:
   node: true
@@ -15,3 +16,5 @@ extends:
 
 rules:
   'no-restricted-syntax': off
+  'babel/semi': warn
+  'semi': off
