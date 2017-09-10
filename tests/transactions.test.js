@@ -31,8 +31,8 @@ afterEach(async () => {
 
 describe('Transactions', () => {
   it('Single action', async () => {
-    fluorite.transaction(async () => {
-      const user = await User.objects.get(1);
+    await fluorite.transaction(async () => {
+      const user = await User.find(1);
       user.set({ name: 'Billy Idol' });
       await user.save();
     });
@@ -40,16 +40,16 @@ describe('Transactions', () => {
 
   it('Multiple action', async () => {
     await fluorite.transaction(async () => {
-      const user = await User.objects.get(1);
+      const user = await User.find(1);
       await user.posts().update({ title: 'New Title' });
     });
   });
 
   it('Return value from transaction', async () => {
     const posts = await fluorite.transaction(async () => {
-      const user = await User.objects.get(1);
+      const user = await User.find(1);
       await user.posts().update({ title: 'New Title' });
-      return user.posts().all();
+      return user.posts();
     });
     expect(posts).toBeInstanceOf(Array);
   });

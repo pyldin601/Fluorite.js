@@ -71,6 +71,17 @@ user.set('age', 29);
 await user.save();
 ```
 
+You also can also pass an object of properties to `set` method:
+```javascript
+user.set({ age: 29, name: 'Bob Doe' });
+await user.save();
+```
+
+Or shorthand 'set and update':
+```javascript
+await user.save({ age: 29, name: 'Bob Doe' });
+```
+
 ### Delete object
 To delete object from database use `remove()`.
 ```javascript
@@ -78,19 +89,27 @@ await user.remove();
 ```
 
 ## Querying
-Each Model has `objects` property that returns new `Query` object that
-can be used to retrieve or bulk update groups of objects.
+Each Model has `objects` property that returns new `MultipleRowsQuery` object that
+can be used to retrieve or bulk update group of objects.
 
 ### Retrieving all objects
-To retrieve all objects from table use `all()`
+To retrieve all objects use `async/await` or `then` promise syntax:
 ```javascript
-const users = await User.objects.all();
+const users = await User.objects;
+User.objects.then(users => console.log(users));
 ```
-This method returns promise that resolves to `Array` of all objects.
+This method resolves to `Array` of all objects.
+
+You can also use experimental `asyncInterator` syntax to iterate over database rows:
+```javascript
+for await (const user of User.objects) {
+  console.log(user.get('name'));
+}
+```
 
 ### Retrieving objects with filters
 ```javascript
-const adults = await User.objects.filter({ age__gte: 18 }).all();
+const adults = await User.objects.filter({ age__gte: 18 });
 ```
 
 ### Chaining filters
@@ -100,21 +119,29 @@ const adultFemales = await User.objects
   .filter({ gender: 'female' })
   .all();
 ```
-All filters and immutable. Each time you refine `Query` you get new copy of `Query`.
+All filters are immutable. Each time you refine your criteria you get new copy of query.
 
 ### Limits and Offsets
 To limit amount of objects to be returned use `limit()`.
 You could also use `offset()` to specify offset for objects query.
 ```javascript
-const firstFiveUsers = await User.objects.limit(5).all();
-const nextFiveUsers = await User.object.limit(5).offset(5).all();
+const firstFiveUsers = await User.objects.limit(5);
+const nextFiveUsers = await User.object.limit(5).offset(5);
 ``` 
 
 ### Retrieve single object
-To retrieve single object use `get()`.
-You call `get()` with primitive value (`string`, `integer`, `boolean`) and it will look for
-object by primary key with given value.
+There are two different ways to retrieve single object from database.
+
+1. If you expect that your query may return only one row:
 ```javascript
-const user = await User.objects.get(1);
+const user = await User.objects.single({ name: 'John Doe' });
 ```
-It will throw `User.NotFoundError` if object does not exist in table or `User.IntegrityError` if SQL statement returned more than one row.
+
+2. If your query may result in many rows but you want only first:
+```javascript
+const user = await User.objects.first({ name: 'John Doe' });
+
+```
+
+Difference of this methods is only that `single` will fail with `User.IntegrityError` if SQL statement returned more than one row.
+If object matching your criteria does not exist both of it will throw `Model.NotFoundError`.

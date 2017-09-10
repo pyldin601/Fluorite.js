@@ -1,6 +1,6 @@
 {
   "name": "fluorite",
-  "version": "1.0.0-beta-3",
+  "version": "1.0.0-beta-4",
   "description": "Lightweight ORM based on Knex.js query builder.",
   "main": "dist/index.js",
   "scripts": {
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "knex": "*",
-    "lodash": "*"
+    "lodash": "*",
+    "stream-to-async-iterator": "^0.2.0"
   }
 }

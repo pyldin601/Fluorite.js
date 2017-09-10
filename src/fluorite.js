@@ -19,7 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 import model from './model';
 import transaction from './transaction';
 
@@ -27,6 +26,9 @@ export default (knex) => {
   const fluoriteAttributes = ({
     knex,
     transaction: transaction(knex),
+    wrapModel: (rowData, ModelClass) => {
+      return new ModelClass(rowData, Object.assign({}, rowData));
+    },
   });
 
   return {

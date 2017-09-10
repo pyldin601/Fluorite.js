@@ -19,7 +19,7 @@ afterEach(async () => {
 
 describe('Query Tests', () => {
   it('Should fetch all', async () => {
-    const foos = await Foo.objects.all();
+    const foos = await Foo.objects;
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 46, id: 1, name: 'John Doe' },
@@ -29,7 +29,7 @@ describe('Query Tests', () => {
   });
 
   it('Should fetch with offsets', async () => {
-    const foos = await Foo.objects.offset(1).all();
+    const foos = await Foo.objects.offset(1);
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 72, id: 2, name: 'Bob Marley' },
@@ -40,8 +40,7 @@ describe('Query Tests', () => {
   it('Should fetch with limits and offsets', async () => {
     const foos = await Foo.objects
       .limit(1)
-      .offset(1)
-      .all();
+      .offset(1);
     expect(foos).toBeInstanceOf(Array);
     expect(foos.map(foo => foo.toJSON())).toEqual([
       { age: 72, id: 2, name: 'Bob Marley' },
@@ -49,7 +48,7 @@ describe('Query Tests', () => {
   });
 
   it('Test simple filter', async () => {
-    const foos = await Foo.objects.filter({ id__eq: 1 }).all();
+    const foos = await Foo.objects.filter({ id__eq: 1 });
     expect(foos.length).toBe(1);
   });
 
@@ -104,19 +103,5 @@ describe('Query Tests', () => {
   it('Pluck names', async () => {
     const names = await Foo.objects.filter({ age__gt: 18 }).pluck('name');
     expect(names).toEqual(['John Doe', 'Bob Marley']);
-  });
-
-  it('Test getOrCreate method', async () => {
-    const user1 = await Foo.objects.getOrCreate({ name: 'Bob Marley' }, { age: 66 });
-    expect(user1.get('age')).toBe(72);
-
-    const user2 = await Foo.objects.getOrCreate({ name: 'Bill Gates' }, { age: 66 });
-    expect(user2.get('age')).toBe(66);
-  });
-
-  it('Test getOrCreate method with error', async () => {
-    await Foo.knex.schema.dropTable('foo');
-
-    return expect(Foo.objects.getOrCreate({ foo: 'Bob Marley' }, { age: 66 })).rejects.toBeDefined();
   });
 });

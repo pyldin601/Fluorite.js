@@ -9,9 +9,9 @@ beforeEach(async () => {
     table.integer('age').unsigned().notNullable();
   });
 
-  await knex('foo').insert({ name: 'John Doe', age: 46 });
-  await knex('foo').insert({ name: 'Bob Marley', age: 72 });
-  await knex('foo').insert({ name: 'Billy', age: 12 });
+  await knex('foo').insert({ id: 1, name: 'John Doe', age: 46 });
+  await knex('foo').insert({ id: 2, name: 'Bob Marley', age: 72 });
+  await knex('foo').insert({ id: 3, name: 'Billy', age: 12 });
 });
 
 afterEach(async () => {
@@ -27,7 +27,7 @@ describe('Model tests', () => {
   });
 
   it('Test find by id (if exists)', async () => {
-    const foo1 = await Foo.objects.get(1);
+    const foo1 = await Foo.find(1);
     expect(foo1.attributes).toEqual({ id: 1, name: 'John Doe', age: 46 });
     expect(foo1.id).toBe(1);
     expect(foo1.get('name')).toBe('John Doe');
@@ -36,7 +36,7 @@ describe('Model tests', () => {
   it('Test find by id (if not exists)', async () => {
     expect.assertions(2);
     try {
-      await Foo.objects.get(10);
+      await Foo.find(10);
     } catch (e) {
       expect(e).toBeInstanceOf(Foo.NotFoundError);
       expect(e.message).toBe('Entity not found');
@@ -44,7 +44,7 @@ describe('Model tests', () => {
   });
 
   it('Test serialization', async () => {
-    const foos = await Foo.objects.all();
+    const foos = await Foo.objects;
     const json = foos.map(foo => foo.toJSON());
     expect(json).toEqual(
       [
@@ -56,12 +56,12 @@ describe('Model tests', () => {
   });
 
   it('Test filter "eq"', async () => {
-    const foos = await Foo.objects.filter({ age__eq: 12 }).all();
+    const foos = await Foo.objects.filter({ age__eq: 12 });
     expect(foos.length).toBe(1);
   });
 
   it('Test filter "gt"', async () => {
-    const foos = await Foo.objects.filter({ age__gt: 18 }).all();
+    const foos = await Foo.objects.filter({ age__gt: 18 });
     expect(foos.length).toBe(2);
   });
 
@@ -82,18 +82,23 @@ describe('Model tests', () => {
 
   it('Test clone', async () => {
     const qb1 = Foo.objects;
+
+
     const qb2 = qb1.filter({ age__gt: 18 });
-    expect(await qb2.count()).toBe(2);
+
+    console.log(await qb1.count());
+
     expect(await qb1.count()).toBe(3);
+    expect(await qb2.count()).toBe(2);
   });
 
   it('Fetch One', async () => {
-    const foo = await Foo.objects.limit(1).one();
+    const foo = await Foo.objects.first();
     expect(foo).toBeInstanceOf(Foo);
   });
 
   it('Fetch One (integrity error)', () => {
-    const foo = Foo.objects.one();
+    const foo = Foo.objects.single();
     return expect(foo).rejects.toBeInstanceOf(Foo.IntegrityError);
   });
 
@@ -109,7 +114,7 @@ describe('Model tests', () => {
   });
 
   it('Update entity', async () => {
-    const foo = await Foo.objects.get(1);
+    const foo = await Foo.find(1);
     foo.set('name', 'Other Guy');
     foo.set({
       name: 'Other Guy',
@@ -119,16 +124,16 @@ describe('Model tests', () => {
     // Do not update if nothing to update
     await foo.save();
 
-    const updatedFoo = await Foo.objects.get(1);
+    const updatedFoo = await Foo.find(1);
     expect(updatedFoo.get('name')).toBe('Other Guy');
   });
 
   it('Delete entity', async () => {
-    const foo = await Foo.objects.get(1);
+    const foo = await Foo.find(1);
 
     await foo.remove();
 
-    return expect(Foo.objects.get(1)).rejects.toBeInstanceOf(Foo.NotFoundError);
+    return expect(Foo.find(1)).rejects.toBeInstanceOf(Foo.NotFoundError);
   });
 
   it('Fail if deleting new entity', () => (
@@ -137,10 +142,10 @@ describe('Model tests', () => {
   ));
 
   it('Test scopes functionality', async () => {
-    const foo1 = await Foo.objects.first().all();
+    const foo1 = await Foo.objects.firstOne();
     expect(foo1.length).toBe(1);
 
-    const foo2 = await Foo.objects.last(2).all();
+    const foo2 = await Foo.objects.lastFew(2);
     expect(first(foo2).id).toBe(3);
     expect(foo2.length).toBe(2);
 

@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-import { pickBy, isNil, last, isEmpty } from 'lodash';
-import Query from './query';
+import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
+import { MultipleRowsQuery } from './query';
 import errors from './errors';
 import { BelongsTo, BelongsToMany, HasMany } from './relations';
 
@@ -44,6 +44,14 @@ export default fluorite => class Model {
 
   static create(attrs) {
     return new this(attrs);
+  }
+
+  static get objects() {
+    return new MultipleRowsQuery(this);
+  }
+
+  static find(id) {
+    return this.objects.first({ [this.idAttribute]: id });
   }
 
   constructor(attributes, previousAttributes = {}) {
@@ -90,7 +98,12 @@ export default fluorite => class Model {
     this.attributes[name] = value;
   }
 
-  async save() {
+  async save(name, value) {
+    if (!isEmpty(name)) {
+      this.set(name, value);
+      return this.save();
+    }
+
     if (this.isNew) {
       return this.insert();
     }
@@ -133,21 +146,29 @@ export default fluorite => class Model {
     return this.attributes;
   }
 
-  hasMany(relatedClass, foreignKey, foreignKeyTarget) {
+  hasMany(
+    relatedClass,
+    foreignKey = `${this.constructor.name.toLowerCase()}_id`,
+    foreignKeyTarget = this.constructor.idAttribute,
+  ) {
     return new HasMany(this, relatedClass, foreignKey, foreignKeyTarget);
   }
 
-  belongsTo(relatedClass, foreignKey, foreignKeyTarget) {
+  belongsTo(
+    relatedClass,
+    foreignKey = `${relatedClass.name.toLowerCase()}_id`,
+    foreignKeyTarget = relatedClass.idAttribute,
+  ) {
     return new BelongsTo(this, relatedClass, foreignKey, foreignKeyTarget);
   }
 
   belongsToMany(
     relatedClass,
-    pivotTableName,
-    thisForeignKey,
-    thatForeignKey,
-    thisForeignKeyTarget,
-    thatForeignKeyTarget,
+    pivotTableName = sortBy([this.constructor.table, relatedClass.table]).join('_'),
+    thisForeignKey = `${this.constructor.name.toLowerCase()}_id`,
+    thatForeignKey = `${relatedClass.name.toLowerCase()}_id`,
+    thisForeignKeyTarget = this.constructor.idAttribute,
+    thatForeignKeyTarget = relatedClass.idAttribute,
   ) {
     return new BelongsToMany(
       this,
@@ -162,9 +183,5 @@ export default fluorite => class Model {
 
   toJSON() {
     return this.serialize();
-  }
-
-  static get objects() {
-    return new Query(this);
   }
 };

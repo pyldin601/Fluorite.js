@@ -20,40 +20,43 @@
  * SOFTWARE.
  */
 
-import { sortBy } from 'lodash';
-import Query from './query';
+import { SingleRowQuery, MultipleRowsQuery } from './query';
 
-class Relation {
-  constructor(relatedClass) {
-    this.relatedClass = relatedClass;
-  }
-
-  get relatedQuery() {
-    return new Query(this.relatedClass);
-  }
-}
-
-export class BelongsTo extends Relation {
-  constructor(sourceEntity, relatedClass, foreignKey, foreignKeyTarget) {
+export class BelongsTo extends SingleRowQuery {
+  constructor(
+    sourceEntity,
+    relatedClass,
+    foreignKey,
+    foreignKeyTarget,
+  ) {
     super(relatedClass);
-    this.sourceEntity = sourceEntity;
-    this.foreignKey = foreignKey || `${relatedClass.name.toLowerCase()}_id`;
-    this.foreignKeyTarget = foreignKeyTarget || relatedClass.idAttribute;
+
+    return this.filter({ [foreignKeyTarget]: sourceEntity.get(foreignKey) });
   }
 
-  get query() {
-    return this.relatedQuery
-      .filter({ [this.foreignKeyTarget]: this.sourceEntity.get(this.foreignKey) });
+  clone() {
+    return new SingleRowQuery(this.modelClass, this.knexQuery.clone());
   }
 }
 
-export class HasMany extends BelongsTo {
-  constructor(sourceEntity, relatedClass, foreignKey, foreignKeyTarget) {
-    super(sourceEntity, relatedClass, foreignKeyTarget, foreignKey);
+export class HasMany extends MultipleRowsQuery {
+  constructor(
+    sourceEntity,
+    relatedClass,
+    foreignKey,
+    foreignKeyTarget,
+  ) {
+    super(relatedClass);
+
+    return this.filter({ [foreignKey]: sourceEntity.get(foreignKeyTarget) });
+  }
+
+  clone() {
+    return new MultipleRowsQuery(this.modelClass, this.knexQuery.clone());
   }
 }
 
-export class BelongsToMany extends Relation {
+export class BelongsToMany extends MultipleRowsQuery {
   constructor(
     sourceEntity,
     relatedClass,
@@ -64,25 +67,20 @@ export class BelongsToMany extends Relation {
     thatForeignKeyTarget,
   ) {
     super(relatedClass);
-    this.sourceEntity = sourceEntity;
 
-    this.pivotTableName = pivotTableName || sortBy([this.sourceEntity.constructor.table, relatedClass.table]).join('_');
-    this.thisForeignKey = thisForeignKey || `${this.sourceEntity.constructor.name.toLowerCase()}_id`;
-    this.thatForeignKey = thatForeignKey || `${relatedClass.name.toLowerCase()}_id`;
-    this.thisForeignKeyTarget = thisForeignKeyTarget || this.sourceEntity.constructor.idAttribute;
-    this.thatForeignKeyTarget = thatForeignKeyTarget || relatedClass.idAttribute;
-  }
-
-  get query() {
-    return this.relatedQuery
+    return this
       .query(q => q
         .innerJoin(
-          this.pivotTableName,
-          `${this.pivotTableName}.${this.thatForeignKey}`,
-          `${this.relatedClass.table}.${this.thatForeignKeyTarget}`,
+          pivotTableName,
+          `${pivotTableName}.${thatForeignKey}`,
+          `${relatedClass.table}.${thatForeignKeyTarget}`,
         )
-        .select(`${this.relatedClass.table}.*`)
-        .where({ [`${this.pivotTableName}.${this.thisForeignKey}`]: this.sourceEntity.get(this.thisForeignKeyTarget) }),
+        .select(`${relatedClass.table}.*`)
+        .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
       );
+  }
+
+  clone() {
+    return new MultipleRowsQuery(this.modelClass, this.knexQuery.clone());
   }
 }

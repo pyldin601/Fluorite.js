@@ -9,9 +9,9 @@ beforeEach(async () => {
     table.string('name').unsigned().notNullable();
   });
 
-  await knex('users').insert({ name: 'John Doe' });
-  await knex('users').insert({ name: 'Bob Marley' });
-  await knex('users').insert({ name: 'Billy Boy' });
+  await knex('users').insert({ id: 1, name: 'John Doe' });
+  await knex('users').insert({ id: 2, name: 'Bob Marley' });
+  await knex('users').insert({ id: 3, name: 'Billy Boy' });
 
   await knex.schema.createTable('things', (table) => {
     table.increments();
@@ -19,9 +19,9 @@ beforeEach(async () => {
     table.integer('user_id').unsigned().notNullable().references('users.id');
   });
 
-  await knex('things').insert({ name: 'Thing #1', user_id: 1 });
-  await knex('things').insert({ name: 'Thing #2', user_id: 1 });
-  await knex('things').insert({ name: 'Thing #3', user_id: 2 });
+  await knex('things').insert({ id: 1, name: 'Thing #1', user_id: 1 });
+  await knex('things').insert({ id: 2, name: 'Thing #2', user_id: 1 });
+  await knex('things').insert({ id: 3, name: 'Thing #3', user_id: 2 });
 
   await knex.schema.createTable('addresses', (table) => {
     table.increments();
@@ -30,9 +30,9 @@ beforeEach(async () => {
     table.string('flat').notNullable();
   });
 
-  await knex('addresses').insert({ street: 'Kutuzova', building: '2', flat: 52 });
-  await knex('addresses').insert({ street: 'Michurina', building: '2', flat: 21 });
-  await knex('addresses').insert({ street: 'Lumumby', building: 13, flat: 55 });
+  await knex('addresses').insert({ id: 1, street: 'Kutuzova', building: '2', flat: 52 });
+  await knex('addresses').insert({ id: 2, street: 'Michurina', building: '2', flat: 21 });
+  await knex('addresses').insert({ id: 3, street: 'Lumumby', building: 13, flat: 55 });
 
   await knex.schema.createTable('addresses_users', (table) => {
     table.integer('address_id').unsigned().notNullable().references('addresses.id');
@@ -58,41 +58,41 @@ afterEach(async () => {
 
 describe('Test relations', () => {
   it('Test hasMany relation #1', async () => {
-    const user = await User.objects.get(1);
+    const user = await User.find(1);
 
     expect(user).toBeInstanceOf(User);
 
-    const things = await user.things().all();
+    const things = await user.things();
 
     expect(JSON.stringify(things)).toBe(
       '[{"id":1,"name":"Thing #1","user_id":1},{"id":2,"name":"Thing #2","user_id":1}]',
     );
   });
   it('Test hasMany relation #2', async () => {
-    const user = await User.objects.get(2);
-    const things = await user.things().all();
+    const user = await User.find(2);
+    const things = await user.things();
 
     expect(JSON.stringify(things)).toBe(
       '[{"id":3,"name":"Thing #3","user_id":2}]',
     );
   });
   it('Test hasMany relation #3', async () => {
-    const user = await User.objects.get(3);
-    const things = await user.things().all();
+    const user = await User.find(3);
+    const things = await user.things();
 
     expect(things.length).toBe(0);
   });
 
   it('Test belongsTo relation #1', async () => {
-    const thing = await Thing.objects.get(3);
-    const user = await thing.user().one();
+    const thing = await Thing.find(3);
+    const user = await thing.user();
 
     expect(user.id).toBe(2);
   });
 
   it('Test belongsToMany relation #1', async () => {
-    const user = await User.objects.get(1);
-    const addresses = await user.addresses().all();
+    const user = await User.find(1);
+    const addresses = await user.addresses();
 
     expect(JSON.stringify(addresses)).toBe(
       '[{"id":1,"street":"Kutuzova","building":"2","flat":"52"},' +
@@ -102,8 +102,8 @@ describe('Test relations', () => {
   });
 
   it('Test belongsToMany relation #2', async () => {
-    const user = await User.objects.get(2);
-    const addresses = await user.addresses().all();
+    const user = await User.find(2);
+    const addresses = await user.addresses();
 
     expect(JSON.stringify(addresses)).toBe(
       '[{"id":1,"street":"Kutuzova","building":"2","flat":"52"},' +
@@ -112,15 +112,15 @@ describe('Test relations', () => {
   });
 
   it('Test belongsToMany relation #3', async () => {
-    const user = await User.objects.get(3);
-    const addresses = await user.addresses().all();
+    const user = await User.find(3);
+    const addresses = await user.addresses();
 
     expect(addresses.length).toBe(0);
   });
 
   it('Test belongsToMany relation #4', async () => {
-    const address = await Address.objects.get(1);
-    const users = await address.users().all();
+    const address = await Address.find(1);
+    const users = await address.users();
 
     expect(JSON.stringify(users)).toBe(
       '[{"id":1,"name":"John Doe"},{"id":2,"name":"Bob Marley"}]',

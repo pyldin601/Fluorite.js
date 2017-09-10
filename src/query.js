@@ -19,42 +19,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-import { first } from 'lodash';
+import { first, isEmpty } from 'lodash';
+import StreamToAsync from 'stream-to-async-iterator';
 import filter from './filter';
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
 );
 
-const wrap = (row, ModelClass) =>
-  new ModelClass(row, Object.assign({}, row));
-
-const createUniqueQuery = (knexQuery, callback) => {
-  const newQuery = knexQuery.clone();
-  callback(newQuery);
-  return newQuery;
-};
-
-export default class Query {
-  constructor(modelClass, knex = undefined) {
+class BaseQuery {
+  constructor(modelClass, knexQuery = modelClass.knex(modelClass.table)) {
     this.modelClass = modelClass;
-    this.knexQuery = knex || modelClass.knex(modelClass.table);
+    this.knexQuery = knexQuery;
 
-    return new Proxy(this, {
-      get(target, property) {
-        if (property in target) {
-          return target[property];
-        }
+    for (const property of Object.keys(modelClass.scopes)) {
+      const scope = modelClass.scopes[property];
+      this[property] = (...args) => scope(this, ...args);
+    }
+  }
 
-        if (property in target.modelClass.scopes) {
-          const scope = target.modelClass.scopes[property];
-          return (...args) => scope(target, ...args);
-        }
-
-        return undefined;
-      },
-    });
+  clone() {
+    return new this.constructor(
+      this.modelClass,
+      this.knexQuery.clone(),
+    );
   }
 
   get knexQueryTransacting() {
@@ -71,10 +59,13 @@ export default class Query {
   }
 
   query(callback) {
-    return new Query(
-      this.modelClass,
-      createUniqueQuery(this.knexQuery, callback),
-    );
+    const clone = this.clone();
+    callback(clone.knexQuery);
+    return clone;
+  }
+
+  toString() {
+    return this.knexQuery.toString();
   }
 
   limit(number) {
@@ -91,51 +82,42 @@ export default class Query {
     return model;
   }
 
-  async get(id) {
-    return this.filter({ [this.modelClass.idAttribute]: id }).one();
-  }
-
-  async getOrCreate(attributes, defaults = {}) {
-    try {
-      return await this.query(q => q.where(attributes)).one();
-    } catch (e) {
-      if (e instanceof this.modelClass.NotFoundError) {
-        return this.create({ ...defaults, ...attributes });
-      }
-      throw e;
-    }
-  }
-
-  async one() {
-    const rows = await this.knexQueryTransacting.select();
-
-    if (rows.length === 0) {
-      throw new this.modelClass.NotFoundError('Entity not found');
-    }
-
-    if (rows.length > 1) {
-      throw new this.modelClass.IntegrityError('More than one entity returned');
-    }
-
-    return wrap(first(rows), this.modelClass);
-  }
-
-  all() {
-    return this.knexQueryTransacting
-      .select()
-      .then(rows => rows.map(row => wrap(row, this.modelClass)));
-  }
-
-  pluck(column) {
-    return this.knexQueryTransacting.pluck(column);
-  }
-
   async update(attributes) {
     await this.knexQueryTransacting.update(attributes);
   }
 
   async remove() {
     await this.knexQueryTransacting.delete();
+  }
+}
+
+export class SingleRowQuery extends BaseQuery {
+  async then(resolve, reject) {
+    return this.eval().then(resolve, reject);
+  }
+
+  eval() {
+    const fluorite = this.modelClass.fluorite;
+    return this
+      .knexQueryTransacting
+      .select()
+      .then(async (rows) => {
+        if (rows.length === 1) {
+          return fluorite.wrapModel(first(rows), this.modelClass);
+        }
+
+        if (rows.length === 0) {
+          throw new this.modelClass.NotFoundError('Entity not found');
+        }
+
+        throw new this.modelClass.IntegrityError('More than one entity returned');
+      });
+  }
+}
+
+export class MultipleRowsQuery extends BaseQuery {
+  async then(resolve, reject) {
+    return this.eval().then(resolve, reject);
   }
 
   count(column = null) {
@@ -156,5 +138,43 @@ export default class Query {
 
   avg(column) {
     return getValue(this.knexQueryTransacting.avg(column));
+  }
+
+  pluck(column) {
+    return this.knexQueryTransacting.pluck(column);
+  }
+
+  single(attributes) {
+    if (!isEmpty(attributes)) {
+      return this.filter(attributes).first();
+    }
+
+    return new SingleRowQuery(this.modelClass, this.knexQuery);
+  }
+
+  first(attributes) {
+    return this.single(attributes).limit(1);
+  }
+
+  eval() {
+    const fluorite = this.modelClass.fluorite;
+    return this
+      .knexQueryTransacting
+      .select()
+      .then(rows => rows.map(row => fluorite.wrapModel(row, this.modelClass)));
+  }
+
+  [Symbol.asyncIterator]() {
+    const modelClass = this.modelClass;
+    const stream = this
+      .knexQueryTransacting
+      .select()
+      .stream();
+
+    return async function* asyncIterator() {
+      for await (const rowData of new StreamToAsync(stream)) {
+        yield modelClass.fluorite.wrapModel(rowData, modelClass);
+      }
+    };
   }
 }
