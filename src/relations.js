@@ -23,29 +23,37 @@
 import { sortBy } from 'lodash';
 import Query from './query';
 
-export class BelongsTo extends Query {
-  constructor(sourceEntity, relatedClass, foreignKey, foreignKeyTarget) {
-    super(relatedClass);
-    this.sourceEntity = sourceEntity;
+class Relation {
+  constructor(relatedClass) {
+    this.relatedClass = relatedClass;
+  }
 
-    const fk = foreignKey || `${relatedClass.name.toLowerCase()}_id`;
-    const fkt = foreignKeyTarget || relatedClass.idAttribute;
-    return this.filter({ [fkt]: this.sourceEntity.get(fk) });
+  get relatedQuery() {
+    return new Query(this.relatedClass);
   }
 }
 
-export class HasMany extends Query {
+export class BelongsTo extends Relation {
   constructor(sourceEntity, relatedClass, foreignKey, foreignKeyTarget) {
     super(relatedClass);
     this.sourceEntity = sourceEntity;
+    this.foreignKey = foreignKey || `${relatedClass.name.toLowerCase()}_id`;
+    this.foreignKeyTarget = foreignKeyTarget || relatedClass.idAttribute;
+  }
 
-    const fk = foreignKey || `${sourceEntity.constructor.name.toLowerCase()}_id`;
-    const fkt = foreignKeyTarget || sourceEntity.constructor.idAttribute;
-    return this.filter({ [fk]: this.sourceEntity.get(fkt) });
+  get query() {
+    return this.relatedQuery
+      .filter({ [this.foreignKeyTarget]: this.sourceEntity.get(this.foreignKey) });
   }
 }
 
-export class BelongsToMany extends Query {
+export class HasMany extends BelongsTo {
+  constructor(sourceEntity, relatedClass, foreignKey, foreignKeyTarget) {
+    super(sourceEntity, relatedClass, foreignKeyTarget, foreignKey);
+  }
+}
+
+export class BelongsToMany extends Relation {
   constructor(
     sourceEntity,
     relatedClass,
@@ -58,17 +66,23 @@ export class BelongsToMany extends Query {
     super(relatedClass);
     this.sourceEntity = sourceEntity;
 
-    const pivotTn = pivotTableName || sortBy([this.sourceEntity.constructor.table, relatedClass.table]).join('_');
-    const thisFk = thisForeignKey || `${this.sourceEntity.constructor.name.toLowerCase()}_id`;
-    const thatFk = thatForeignKey || `${relatedClass.name.toLowerCase()}_id`;
-    const thisFkt = thisForeignKeyTarget || this.sourceEntity.constructor.idAttribute;
-    const thatFkt = thatForeignKeyTarget || relatedClass.idAttribute;
+    this.pivotTableName = pivotTableName || sortBy([this.sourceEntity.constructor.table, relatedClass.table]).join('_');
+    this.thisForeignKey = thisForeignKey || `${this.sourceEntity.constructor.name.toLowerCase()}_id`;
+    this.thatForeignKey = thatForeignKey || `${relatedClass.name.toLowerCase()}_id`;
+    this.thisForeignKeyTarget = thisForeignKeyTarget || this.sourceEntity.constructor.idAttribute;
+    this.thatForeignKeyTarget = thatForeignKeyTarget || relatedClass.idAttribute;
+  }
 
-    return this
+  get query() {
+    return this.relatedQuery
       .query(q => q
-        .innerJoin(pivotTn, `${pivotTn}.${thatFk}`, `${relatedClass.table}.${thatFkt}`)
-        .select(`${relatedClass.table}.*`)
-        .where({ [`${pivotTn}.${thisFk}`]: this.sourceEntity.get(thisFkt) }),
+        .innerJoin(
+          this.pivotTableName,
+          `${this.pivotTableName}.${this.thatForeignKey}`,
+          `${this.relatedClass.table}.${this.thatForeignKeyTarget}`,
+        )
+        .select(`${this.relatedClass.table}.*`)
+        .where({ [`${this.pivotTableName}.${this.thisForeignKey}`]: this.sourceEntity.get(this.thisForeignKeyTarget) }),
       );
   }
 }
