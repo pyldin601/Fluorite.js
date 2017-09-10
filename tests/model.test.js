@@ -28,6 +28,7 @@ describe('Model tests', () => {
 
   it('Test find by id (if exists)', async () => {
     const foo1 = await Foo.find(1);
+    console.log(foo1.toString());
     expect(foo1.attributes).toEqual({ id: 1, name: 'John Doe', age: 46 });
     expect(foo1.id).toBe(1);
     expect(foo1.get('name')).toBe('John Doe');
@@ -36,7 +37,9 @@ describe('Model tests', () => {
   it('Test find by id (if not exists)', async () => {
     expect.assertions(2);
     try {
-      await Foo.find(10);
+      const foo = Foo.find(10);
+      console.log(foo.toString());
+      await foo;
     } catch (e) {
       expect(e).toBeInstanceOf(Foo.NotFoundError);
       expect(e.message).toBe('Entity not found');

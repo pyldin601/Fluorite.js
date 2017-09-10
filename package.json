@@ -33,6 +33,7 @@
     "sqlite3": "*"
   },
   "dependencies": {
+    "continuation-local-storage": "^3.2.0",
     "knex": "*",
     "lodash": "*",
     "stream-to-async-iterator": "^0.2.0"

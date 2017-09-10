@@ -34,8 +34,8 @@ export class BelongsTo extends SingleRowQuery {
     return this.filter({ [foreignKeyTarget]: sourceEntity.get(foreignKey) });
   }
 
-  clone() {
-    return new SingleRowQuery(this.modelClass, this.knexQuery.clone());
+  query(callback) {
+    return new SingleRowQuery(this.modelClass, [callback]);
   }
 }
 
@@ -51,8 +51,8 @@ export class HasMany extends MultipleRowsQuery {
     return this.filter({ [foreignKey]: sourceEntity.get(foreignKeyTarget) });
   }
 
-  clone() {
-    return new MultipleRowsQuery(this.modelClass, this.knexQuery.clone());
+  query(callback) {
+    return new MultipleRowsQuery(this.modelClass, [callback]);
   }
 }
 
@@ -80,7 +80,7 @@ export class BelongsToMany extends MultipleRowsQuery {
       );
   }
 
-  clone() {
-    return new MultipleRowsQuery(this.modelClass, this.knexQuery.clone());
+  query(callback) {
+    return new MultipleRowsQuery(this.modelClass, [callback]);
   }
 }

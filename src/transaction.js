@@ -36,10 +36,10 @@ export default (knex) => {
         }
       });
     },
-    get isTransacting() {
+    isTransacting() {
       return transactions.length > 0;
     },
-    get currentTransaction() {
+    currentTransaction() {
       return last(transactions);
     },
   };

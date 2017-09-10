@@ -28,30 +28,34 @@ const getValue = qb => (
 );
 
 class BaseQuery {
-  constructor(modelClass, knexQuery = modelClass.knex(modelClass.table)) {
+  constructor(modelClass, filters = []) {
     this.modelClass = modelClass;
-    this.knexQuery = knexQuery;
+    this.filters = filters;
 
-    for (const property of Object.keys(modelClass.scopes)) {
-      const scope = modelClass.scopes[property];
+    this.applyScopes();
+  }
+
+  applyScopes() {
+    for (const property of Object.keys(this.modelClass.scopes)) {
+      const scope = this.modelClass.scopes[property];
       this[property] = (...args) => scope(this, ...args);
     }
   }
 
-  clone() {
-    return new this.constructor(
-      this.modelClass,
-      this.knexQuery.clone(),
-    );
+  prepareQuery() {
+    const knexQuery = this.knexQueryTransacting();
+    this.filters.forEach(f => f(knexQuery));
+    return knexQuery;
   }
 
-  get knexQueryTransacting() {
-    if (this.modelClass.fluorite.transaction.isTransacting) {
-      return this.knexQuery.clone().transacting(
-        this.modelClass.fluorite.transaction.currentTransaction,
+  knexQueryTransacting() {
+    const knexQuery = this.modelClass.knex(this.modelClass.table);
+    if (this.modelClass.fluorite.transaction.isTransacting()) {
+      return knexQuery.transacting(
+        this.modelClass.fluorite.transaction.currentTransaction(),
       );
     }
-    return this.knexQuery;
+    return knexQuery;
   }
 
   filter(attributes) {
@@ -59,13 +63,11 @@ class BaseQuery {
   }
 
   query(callback) {
-    const clone = this.clone();
-    callback(clone.knexQuery);
-    return clone;
+    return new this.constructor(this.modelClass, [...this.filters, callback]);
   }
 
   toString() {
-    return this.knexQuery.toString();
+    return this.prepareQuery().toString();
   }
 
   limit(number) {
@@ -99,7 +101,7 @@ export class SingleRowQuery extends BaseQuery {
   eval() {
     const fluorite = this.modelClass.fluorite;
     return this
-      .knexQueryTransacting
+      .prepareQuery()
       .select()
       .then(async (rows) => {
         if (rows.length === 1) {
@@ -121,45 +123,45 @@ export class MultipleRowsQuery extends BaseQuery {
   }
 
   count(column = null) {
-    return getValue(this.knexQueryTransacting.count(column));
+    return getValue(this.prepareQuery().count(column));
   }
 
   min(column) {
-    return getValue(this.knexQueryTransacting.min(column));
+    return getValue(this.prepareQuery().min(column));
   }
 
   max(column) {
-    return getValue(this.knexQueryTransacting.max(column));
+    return getValue(this.prepareQuery().max(column));
   }
 
   sum(column) {
-    return getValue(this.knexQueryTransacting.sum(column));
+    return getValue(this.prepareQuery().sum(column));
   }
 
   avg(column) {
-    return getValue(this.knexQueryTransacting.avg(column));
+    return getValue(this.prepareQuery().avg(column));
   }
 
   pluck(column) {
-    return this.knexQueryTransacting.pluck(column);
+    return this.prepareQuery().pluck(column);
   }
 
-  single(attributes) {
+  single(attributes = {}) {
     if (!isEmpty(attributes)) {
-      return this.filter(attributes).first();
+      return this.filter(attributes).single();
     }
 
-    return new SingleRowQuery(this.modelClass, this.knexQuery);
+    return new SingleRowQuery(this.modelClass, this.filters);
   }
 
-  first(attributes) {
+  first(attributes = {}) {
     return this.single(attributes).limit(1);
   }
 
   eval() {
     const fluorite = this.modelClass.fluorite;
     return this
-      .knexQueryTransacting
+      .prepareQuery()
       .select()
       .then(rows => rows.map(row => fluorite.wrapModel(row, this.modelClass)));
   }
@@ -167,7 +169,7 @@ export class MultipleRowsQuery extends BaseQuery {
   [Symbol.asyncIterator]() {
     const modelClass = this.modelClass;
     const stream = this
-      .knexQueryTransacting
+      .prepareQuery()
       .select()
       .stream();
 
