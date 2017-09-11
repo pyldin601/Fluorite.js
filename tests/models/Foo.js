@@ -6,4 +6,5 @@ export default class Foo extends fluorite.Model {
     firstOne: q => q.limit(1),
     lastFew: (q, amount) => q.limit(amount).query(knex => knex.orderBy(Foo.idAttribute, 'desc')),
   };
+  static columns = ['id', 'name', 'age'];
 }

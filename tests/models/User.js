@@ -5,6 +5,7 @@ import fluorite from '../services/fluorite';
 
 export default class User extends fluorite.Model {
   static table = 'users';
+  static columns = ['id', 'name'];
 
   things() {
     return this.hasMany(Thing);
