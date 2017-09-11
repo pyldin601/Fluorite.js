@@ -98,9 +98,8 @@ class BaseQuery {
   }
 
   async then(resolve, reject) {
-    const result = await this.eval();
-
     try {
+      const result = await this.eval();
       return resolve(result);
     } catch (e) {
       return reject(e);
