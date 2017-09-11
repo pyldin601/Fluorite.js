@@ -34,23 +34,24 @@ describe('Transactions', () => {
     await fluorite.transaction(async () => {
       const user = await User.find(1);
       await user.save({ name: 'Alan Davey' });
-      console.log(user);
     });
   });
 
-  xit('Multiple action', async () => {
+  it('Multiple action', async () => {
     await fluorite.transaction(async () => {
-      // const user = await User.find(1);
-      // await user.posts().update({ title: 'New Title' });
+      const user = await User.find(1);
+      await user.posts().update({ title: 'New Title' });
     });
   });
 
-  xit('Return value from transaction', async () => {
+  it('Return value from transaction', async () => {
     const posts = await fluorite.transaction(async () => {
-      // const user = await User.find(1);
-      // await user.posts().update({ title: 'New Title' });
-      // return user.posts();
+      const user = await User.find(1);
+      await user.posts().update({ title: 'New Title' });
+      return user.posts();
     });
-    // expect(posts).toBeInstanceOf(Array);
+    expect(posts).toBeInstanceOf(Array);
+    expect(posts.length).toBe(2);
+    posts.forEach(post => expect(post.get('title')).toBe('New Title'));
   });
 });
