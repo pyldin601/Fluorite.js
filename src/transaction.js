@@ -20,27 +20,19 @@
  * SOFTWARE.
  */
 
-import { last } from 'lodash';
-
-export default (knex) => {
-  const transactions = [];
-
-  return {
-    transaction(callback) {
-      return knex.transaction(async (trx) => {
-        try {
-          transactions.push(trx);
-          return await callback();
-        } finally {
-          transactions.unshift(trx);
-        }
+export default (knex, ns) => ({
+  transaction(callback) {
+    return knex.transaction((trx) => {
+      return ns.runAndReturn(async () => {
+        ns.set('trx', trx);
+        return callback();
       });
-    },
-    isTransacting() {
-      return transactions.length > 0;
-    },
-    currentTransaction() {
-      return last(transactions);
-    },
-  };
-};
+    });
+  },
+  isTransacting() {
+    return ns.get('trx') !== undefined;
+  },
+  currentTransaction() {
+    return ns.get('trx');
+  },
+});

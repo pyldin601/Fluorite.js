@@ -19,13 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+import cls from 'continuation-local-storage';
 import model from './model';
 import transaction from './transaction';
 
+const ns = cls.createNamespace('fluorite');
+
 export default (knex) => {
   const fluoriteAttributes = ({
+    ns,
     knex,
-    transaction: transaction(knex),
+    transaction: transaction(knex, ns),
     wrapModel: (rowData, ModelClass) => (
       new ModelClass(rowData, Object.assign({}, rowData))
     ),

@@ -33,6 +33,8 @@ class BaseQuery {
     this.filters = filters;
 
     this.applyScopes();
+
+    this.then = this.modelClass.fluorite.ns.bind(this.then);
   }
 
   applyScopes() {
@@ -49,13 +51,11 @@ class BaseQuery {
   }
 
   knexQueryTransacting() {
-    const knexQuery = this.modelClass.knex(this.modelClass.table);
     if (this.modelClass.fluorite.transaction.isTransacting()) {
-      return knexQuery.transacting(
-        this.modelClass.fluorite.transaction.currentTransaction(),
-      );
+      return this.modelClass.fluorite.transaction.currentTransaction().from(this.modelClass.table);
     }
-    return knexQuery;
+
+    return this.modelClass.knex(this.modelClass.table);
   }
 
   filter(attributes) {
@@ -92,32 +92,35 @@ class BaseQuery {
     await this.prepareQuery().delete();
   }
 
+  async eval() {
+    throw new Error('Method not implemented');
+  }
+
   async then(resolve, reject) {
+    const result = await this.eval();
+
     try {
-      resolve(await this.eval());
+      return resolve(result);
     } catch (e) {
-      reject(e);
+      return reject(e);
     }
   }
 }
 
 export class SingleRowQuery extends BaseQuery {
-  eval() {
+  async eval() {
     const fluorite = this.modelClass.fluorite;
-    return this
-      .prepareQuery()
-      .select()
-      .then(async (rows) => {
-        if (rows.length === 1) {
-          return fluorite.wrapModel(first(rows), this.modelClass);
-        }
+    const rows = await this.prepareQuery();
 
-        if (rows.length === 0) {
-          throw new this.modelClass.NotFoundError('Entity not found');
-        }
+    if (rows.length === 1) {
+      return fluorite.wrapModel(first(rows), this.modelClass);
+    }
 
-        throw new this.modelClass.IntegrityError('More than one entity returned');
-      });
+    if (rows.length === 0) {
+      throw new this.modelClass.NotFoundError('Entity not found');
+    }
+
+    throw new this.modelClass.IntegrityError('More than one entity returned');
   }
 }
 
@@ -158,7 +161,7 @@ export class MultipleRowsQuery extends BaseQuery {
     return this.single(attributes).limit(1);
   }
 
-  eval() {
+  async eval() {
     const fluorite = this.modelClass.fluorite;
     return this
       .prepareQuery()

@@ -80,11 +80,15 @@ export default fluorite => class Model {
   }
 
   createKnexQuery() {
-    const query = this.constructor.knex(this.constructor.table);
-    if (this.constructor.fluorite.transaction.isTransacting) {
-      query.transacting(this.constructor.fluorite.transaction.currentTransaction);
+    const knex = this.constructor.knex;
+    const transaction = this.constructor.fluorite.transaction;
+
+    if (transaction.isTransacting()) {
+      return knex.transacting(transaction.currentTransaction())
+        .from(this.constructor.table);
     }
-    return query;
+
+    return this.constructor.knex.from(this.constructor.table);
   }
 
   get(name) {
@@ -96,50 +100,6 @@ export default fluorite => class Model {
       this.attributes = { ...this.attributes, ...name };
     }
     this.attributes[name] = value;
-  }
-
-  async save(name, value) {
-    if (!isEmpty(name)) {
-      this.set(name, value);
-      return this.save();
-    }
-
-    if (this.isNew) {
-      return this.insert();
-    }
-    return this.update();
-  }
-
-  async remove() {
-    if (this.isNew) {
-      throw new this.constructor.NotFoundError('Can\'t remove new entity');
-    }
-
-    return this.createKnexQuery()
-      .where(this.constructor.idAttribute, this.id)
-      .delete();
-  }
-
-  async insert() {
-    const ids = await this.createKnexQuery().insert(
-      this.attributesWithoutId,
-      this.constructor.idAttribute,
-    );
-    const lastId = last(ids);
-    this.attributes[this.constructor.idAttribute] = lastId;
-    this.previousAttributes = this.attributes;
-    return lastId;
-  }
-
-  async update() {
-    const updatedAttributes = this.updatedAttributes;
-    if (isEmpty(updatedAttributes)) {
-      return;
-    }
-    await this.createKnexQuery()
-      .update(updatedAttributes)
-      .where({ [this.constructor.idAttribute]: this.id });
-    this.previousAttributes = this.attributes;
   }
 
   serialize() {
@@ -183,5 +143,53 @@ export default fluorite => class Model {
 
   toJSON() {
     return this.serialize();
+  }
+
+  /*
+   * Methods that executes SQL statements
+   */
+
+  async save(name, value) {
+    if (!isEmpty(name)) {
+      this.set(name, value);
+      return this.save();
+    }
+
+    if (this.isNew) {
+      return this.insert();
+    }
+    return this.update();
+  }
+
+  async remove() {
+    if (this.isNew) {
+      throw new this.constructor.NotFoundError('Can\'t remove new entity');
+    }
+
+    return this.createKnexQuery()
+      .where(this.constructor.idAttribute, this.id)
+      .delete();
+  }
+
+  async insert() {
+    const ids = await this.createKnexQuery().insert(
+      this.attributesWithoutId,
+      this.constructor.idAttribute,
+    );
+    const lastId = last(ids);
+    this.attributes[this.constructor.idAttribute] = lastId;
+    this.previousAttributes = this.attributes;
+    return lastId;
+  }
+
+  async update() {
+    const updatedAttributes = this.updatedAttributes;
+    if (isEmpty(updatedAttributes)) {
+      return;
+    }
+    await this.createKnexQuery()
+      .update(updatedAttributes)
+      .where({ [this.constructor.idAttribute]: this.id });
+    this.previousAttributes = this.attributes;
   }
 };
