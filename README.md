@@ -8,6 +8,9 @@ Fluorite is a lightweight ORM based on Knex.js query builder.
 It features promise based interface, provides transactions support,
 bulk updating and deleting, and support for one-to-one, one-to-many and many-to-many relations.
 
+## Requirements
+* `node 8+`
+
 ## Configuration
 First of all you'll need a copy of knex.js query builder to be configured.
 Next, you'll need to create a database representing your domain model, and

@@ -3,6 +3,9 @@
   "version": "1.0.0-beta-4",
   "description": "Lightweight ORM based on Knex.js query builder.",
   "main": "dist/index.js",
+  "engines": {
+    "node": "^8"
+  },
   "scripts": {
     "test": "jest --verbose",
     "lint": "eslint src/",
