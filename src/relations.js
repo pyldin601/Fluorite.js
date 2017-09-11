@@ -69,7 +69,7 @@ export class BelongsToMany extends MultipleRowsQuery {
         `${relatedClass.table}.${thatForeignKeyTarget}`,
       )
       .select(`${relatedClass.table}.*`)
-      .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) })
+      .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
     ]);
   }
 
