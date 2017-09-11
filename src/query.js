@@ -92,6 +92,7 @@ class BaseQuery {
     await this.prepareQuery().delete();
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async eval() {
     throw new Error('Method not implemented');
   }

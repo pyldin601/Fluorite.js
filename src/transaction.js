@@ -22,12 +22,12 @@
 
 export default (knex, ns) => ({
   transaction(callback) {
-    return knex.transaction((trx) => {
-      return ns.runAndReturn(async () => {
+    return knex.transaction(trx => (
+      ns.runAndReturn(async () => {
         ns.set('trx', trx);
         return callback();
-      });
-    });
+      })
+    ));
   },
   isTransacting() {
     return ns.get('trx') !== undefined;
