@@ -29,9 +29,7 @@ export class BelongsTo extends SingleRowQuery {
     foreignKey,
     foreignKeyTarget,
   ) {
-    super(relatedClass);
-
-    return this.filter({ [foreignKeyTarget]: sourceEntity.get(foreignKey) });
+    super(relatedClass, [qb => qb.where({ [foreignKeyTarget]: sourceEntity.get(foreignKey) })]);
   }
 
   query(callback) {
@@ -46,9 +44,7 @@ export class HasMany extends MultipleRowsQuery {
     foreignKey,
     foreignKeyTarget,
   ) {
-    super(relatedClass);
-
-    return this.filter({ [foreignKey]: sourceEntity.get(foreignKeyTarget) });
+    super(relatedClass, [qb => qb.where({ [foreignKey]: sourceEntity.get(foreignKeyTarget) })]);
   }
 
   query(callback) {
@@ -66,18 +62,15 @@ export class BelongsToMany extends MultipleRowsQuery {
     thisForeignKeyTarget,
     thatForeignKeyTarget,
   ) {
-    super(relatedClass);
-
-    return this
-      .query(q => q
-        .innerJoin(
-          pivotTableName,
-          `${pivotTableName}.${thatForeignKey}`,
-          `${relatedClass.table}.${thatForeignKeyTarget}`,
-        )
-        .select(`${relatedClass.table}.*`)
-        .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
-      );
+    super(relatedClass, [qb => qb
+      .innerJoin(
+        pivotTableName,
+        `${pivotTableName}.${thatForeignKey}`,
+        `${relatedClass.table}.${thatForeignKeyTarget}`,
+      )
+      .select(`${relatedClass.table}.*`)
+      .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) })
+    ]);
   }
 
   query(callback) {
