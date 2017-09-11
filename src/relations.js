@@ -33,7 +33,7 @@ export class BelongsTo extends SingleRowQuery {
   }
 
   query(callback) {
-    return new SingleRowQuery(this.modelClass, [callback]);
+    return new SingleRowQuery(this.modelClass, [...this.filters, callback]);
   }
 }
 
@@ -48,7 +48,7 @@ export class HasMany extends MultipleRowsQuery {
   }
 
   query(callback) {
-    return new MultipleRowsQuery(this.modelClass, [callback]);
+    return new MultipleRowsQuery(this.modelClass, [...this.filters, callback]);
   }
 }
 
@@ -74,6 +74,6 @@ export class BelongsToMany extends MultipleRowsQuery {
   }
 
   query(callback) {
-    return new MultipleRowsQuery(this.modelClass, [callback]);
+    return new MultipleRowsQuery(this.modelClass, [...this.filters, callback]);
   }
 }
