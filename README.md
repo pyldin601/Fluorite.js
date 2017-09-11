@@ -96,9 +96,9 @@ can be used to retrieve or bulk update group of objects.
 To retrieve all objects use `async/await` or `then` promise syntax:
 ```javascript
 const users = await User.objects;
+// or
 User.objects.then(users => console.log(users));
 ```
-This method resolves to `Array` of all objects.
 
 You can also use experimental `asyncInterator` syntax to iterate over database rows:
 ```javascript
@@ -132,16 +132,36 @@ const nextFiveUsers = await User.object.limit(5).offset(5);
 ### Retrieve single object
 There are two different ways to retrieve single object from database.
 
-1. If you expect that your query may return only one row:
+1. If you want to retrieve single object using primary key:
+```javascript
+const user = await User.find(5);
+```
+
+2. If you expect to retrieve only single row:
 ```javascript
 const user = await User.objects.single({ name: 'John Doe' });
 ```
 
-2. If your query may result in many rows but you want only first:
+3. If your query may result in many rows but you want get only first one:
 ```javascript
 const user = await User.objects.first({ name: 'John Doe' });
+```
+Difference between `single` and `first` methods is only that `single`
+will fail with `User.IntegrityError` if SQL statement returned more than one row.
+This is also applies to model's `find` method.
 
+If object matching your criteria does not exist `Model.NotFoundError` will be thrown.
+
+## Transactions
+Use of transactions is very simple:
+```javascript
+import { fluorite } from 'fluorite';
+
+await fluorite.transaction(async () => {
+  const user = await User.find(10);
+  await user.save({ name: 'John Doe' });
+});
 ```
 
-Difference of this methods is only that `single` will fail with `User.IntegrityError` if SQL statement returned more than one row.
-If object matching your criteria does not exist both of it will throw `Model.NotFoundError`.
+### Nested transactions
+You can nest transactions as many as your database may support.
