@@ -98,6 +98,7 @@ export default fluorite => class Model {
   set(name, value) {
     if (name instanceof Object) {
       this.attributes = { ...this.attributes, ...name };
+      return;
     }
     this.attributes[name] = value;
   }
@@ -152,12 +153,13 @@ export default fluorite => class Model {
   async save(name, value) {
     if (!isEmpty(name)) {
       this.set(name, value);
-      return this.save();
+      return this.update();
     }
 
     if (this.isNew) {
       return this.insert();
     }
+
     return this.update();
   }
 

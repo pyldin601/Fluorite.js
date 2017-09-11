@@ -33,6 +33,7 @@ describe('Transactions', () => {
   it('Single action', async () => {
     await fluorite.transaction(async () => {
       const user = await User.find(1);
+      await user.save({ name: 'Alan Davey' });
       console.log(user);
     });
   });
