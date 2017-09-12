@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { first, isEmpty, isNull, flatMap } from 'lodash';
+import { first, isEmpty, flatMap } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
 import filter from './filter';
 
@@ -59,19 +59,43 @@ class BaseQuery {
     ];
   }
 
+  makeModel(rowData) {
+    const deflated = this.deflateRowData(rowData);
+    const modelData = deflated[this.modelClass.table];
+    return this.fluorite.wrapModel(modelData);
+  }
+
   buildSelect() {
     return flatMap(
       this.relMap,
       ({ table, columns }, tableIndex) => (
-        columns.map((column, columnIndex) => `${table}.${column} as __rel${tableIndex}__col${columnIndex}`)
+        columns.map((column, columnIndex) => (
+          `${table}.${column} as __rel${tableIndex}__col${columnIndex}`
+        ))
       ),
     );
   }
 
-  parseRowData(rowData) {
+  deflateRowData(rowData) {
     return Object.keys(rowData).reduce((acc, key) => {
       const [, tableIndex, columnIndex] = key.match(relatedRegExp);
-      return { ...acc, [this.relMap[tableIndex].columns[columnIndex]]: rowData[key] };
+      const relation = this.relMap[tableIndex];
+      if (relation.table in acc) {
+        return {
+          ...acc,
+          [relation.table]: {
+            ...acc[relation.table],
+            [this.relMap[tableIndex].columns[columnIndex]]: rowData[key],
+          },
+        };
+      }
+
+      return {
+        ...acc,
+        [relation.table]: {
+          [this.relMap[tableIndex].columns[columnIndex]]: rowData[key],
+        },
+      };
     }, {});
   }
 
@@ -146,13 +170,10 @@ export class SingleRowQuery extends BaseQuery {
     query.clearSelect();
     query.select(select);
 
-    console.log(query.toString());
-
-    const fluorite = this.modelClass.fluorite;
-    const rows = (await query).map(row => this.parseRowData(row));
+    const rows = (await query);
 
     if (rows.length === 1) {
-      return fluorite.wrapModel(first(rows), this.modelClass);
+      return this.makeModel(first(rows));
     }
 
     if (rows.length === 0) {
@@ -207,23 +228,20 @@ export class MultipleRowsQuery extends BaseQuery {
     query.clearSelect();
     query.select(select);
 
-    const fluorite = this.modelClass.fluorite;
-    return query
-      .then(rows => rows.map(row => this.parseRowData(row)))
-      .then(rows => rows.map(row => fluorite.wrapModel(row, this.modelClass)));
+    return query.then(rows => rows.map(row => this.makeModel(row)));
   }
 
   [Symbol.asyncIterator]() {
-    const modelClass = this.modelClass;
-    const stream = this
-      .prepareQuery()
-      .select()
-      .stream();
+    const query = this.prepareQuery();
+    const select = this.buildSelect();
+
+    query.clearSelect();
+    query.select(select);
 
     return async function* asyncIterator() {
-      for await (const rowData of new StreamToAsync(stream)) {
-        yield modelClass.fluorite.wrapModel(rowData, modelClass);
+      for await (const rowData of new StreamToAsync(query.stream())) {
+        yield this.makeModel(rowData);
       }
-    };
+    }.bind(this);
   }
 }
