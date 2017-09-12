@@ -138,4 +138,27 @@ describe('Eager Function Tests', () => {
       },
     });
   });
+
+  it('Fetch user without relations', async () => {
+    const user = await User.find(1);
+    expect(user.toJSON()).toEqual({
+      id: 1,
+      name: 'John Doe',
+      place_id: 1,
+    });
+  });
+
+  it('Fetch user with single relation', async () => {
+    const user = await User.find(1).including('things');
+    expect(user.toJSON()).toEqual({
+      id: 1,
+      name: 'John Doe',
+      place_id: 1,
+      things: [
+        {
+          id: 1,
+        },
+      ],
+    });
+  });
 });

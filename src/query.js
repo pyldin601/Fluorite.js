@@ -23,6 +23,7 @@
 import { first, isEmpty, flatMap } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
 import filter from './filter';
+import { createModelRelationsMap } from './eager';
 
 const relatedRegExp = /^__rel(\d+)__col(\d+)$/;
 
@@ -31,13 +32,14 @@ const getValue = qb => (
 );
 
 class BaseQuery {
-  constructor(modelClass, filters = []) {
+  constructor(modelClass, filters = [], relationNames = []) {
     this.modelClass = modelClass;
     this.filters = filters;
+    this.relationNames = relationNames;
     this.fluorite = modelClass.fluorite;
     this.transaction = this.fluorite.transaction;
 
-    this.relMap = this.buildRelationMap();
+    this.relationsMap = createModelRelationsMap(modelClass, this.relationNames);
 
     this.applyScopes();
 
@@ -60,43 +62,19 @@ class BaseQuery {
   }
 
   makeModel(rowData) {
-    const deflated = this.deflateRowData(rowData);
-    const modelData = deflated[this.modelClass.table];
-    return this.fluorite.wrapModel(modelData, this.modelClass);
+    const deflated = this.extractRelationData(rowData, this.relationsMap, ['root']);
+    return this.fluorite.wrapModel(deflated, this.modelClass);
   }
 
   buildSelect() {
     return flatMap(
-      this.relMap,
+      this.relationsMap,
       ({ table, columns }, tableIndex) => (
         columns.map((column, columnIndex) => (
           `${table}.${column} as __rel${tableIndex}__col${columnIndex}`
         ))
       ),
     );
-  }
-
-  deflateRowData(rowData) {
-    return Object.keys(rowData).reduce((acc, key) => {
-      const [, tableIndex, columnIndex] = key.match(relatedRegExp);
-      const relation = this.relMap[tableIndex];
-      if (relation.table in acc) {
-        return {
-          ...acc,
-          [relation.table]: {
-            ...acc[relation.table],
-            [this.relMap[tableIndex].columns[columnIndex]]: rowData[key],
-          },
-        };
-      }
-
-      return {
-        ...acc,
-        [relation.table]: {
-          [this.relMap[tableIndex].columns[columnIndex]]: rowData[key],
-        },
-      };
-    }, {});
   }
 
   prepareQuery() {
@@ -118,7 +96,15 @@ class BaseQuery {
   }
 
   query(callback) {
-    return new this.constructor(this.modelClass, [...this.filters, callback]);
+    return new this.constructor(
+      this.modelClass, [...this.filters, callback], this.relationNames,
+    );
+  }
+
+  including(...relationNames) {
+    return new this.constructor(
+      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+    );
   }
 
   toString() {
@@ -147,6 +133,34 @@ class BaseQuery {
     await this.prepareQuery().delete();
   }
 
+  applySingleRelation(query, { table, columns, type }, path) {
+    const prefix = (type === 'root' ? '__' : `__${path.join('__')}`);
+    const toSelect = columns.map(column => `${table}.${column} as ${prefix}${column}`);
+    query.select(toSelect);
+  }
+
+  extractRelationData(rowData, { columns, type }, path) {
+    const prefix = (type === 'root' ? '__' : `__${path.join('__')}`);
+    return columns.reduce(
+      (acc, column) => ({
+        ...acc,
+        [column]: rowData[`${prefix}${column}`],
+      }),
+      {},
+    );
+  }
+
+  applyRelationsToQuery(query) {
+    query.clearSelect();
+    this.applySingleRelation(query, this.relationsMap, ['root']);
+  }
+
+  async prepareSelectQuery() {
+    const query = this.prepareQuery();
+    this.applyRelationsToQuery(query);
+    return query;
+  }
+
   // eslint-disable-next-line class-methods-use-this
   async eval() {
     throw new Error('Method not implemented');
@@ -164,11 +178,7 @@ class BaseQuery {
 
 export class SingleRowQuery extends BaseQuery {
   async eval() {
-    const select = this.buildSelect();
-    const query = this.prepareQuery();
-
-    query.clearSelect();
-    query.select(select);
+    const query = this.prepareSelectQuery();
 
     const rows = (await query);
 
@@ -222,21 +232,13 @@ export class MultipleRowsQuery extends BaseQuery {
   }
 
   async eval() {
-    const query = this.prepareQuery();
-    const select = this.buildSelect();
-
-    query.clearSelect();
-    query.select(select);
+    const query = this.prepareSelectQuery();
 
     return query.then(rows => rows.map(row => this.makeModel(row)));
   }
 
   [Symbol.asyncIterator]() {
-    const query = this.prepareQuery();
-    const select = this.buildSelect();
-
-    query.clearSelect();
-    query.select(select);
+    const query = this.prepareSelectQuery();
 
     return async function* asyncIterator() {
       for await (const rowData of new StreamToAsync(query.stream())) {
