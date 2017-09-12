@@ -22,6 +22,10 @@
 
 import { SingleRowQuery, MultipleRowsQuery } from './query';
 
+export const BELONGS_TO_RELATION = 'belongsTo';
+export const HAS_MANY_RELATION = 'hasMany';
+export const BELONGS_TO_MANY_RELATION = 'belongsToMany';
+
 export class BelongsTo extends SingleRowQuery {
   constructor(
     sourceEntity,
@@ -30,7 +34,7 @@ export class BelongsTo extends SingleRowQuery {
     foreignKeyTarget,
   ) {
     super(relatedClass, [qb => qb.where({ [foreignKeyTarget]: sourceEntity.get(foreignKey) })]);
-    this.relationType = 'belongsTo';
+    this.relationType = BELONGS_TO_RELATION;
   }
 
   query(callback) {
@@ -46,7 +50,7 @@ export class HasMany extends MultipleRowsQuery {
     foreignKeyTarget,
   ) {
     super(relatedClass, [qb => qb.where({ [foreignKey]: sourceEntity.get(foreignKeyTarget) })]);
-    this.relationType = 'hasMany';
+    this.relationType = HAS_MANY_RELATION;
   }
 
   query(callback) {
@@ -73,7 +77,7 @@ export class BelongsToMany extends MultipleRowsQuery {
       .select(`${relatedClass.table}.*`)
       .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
     ]);
-    this.relationType = 'belongsToMany';
+    this.relationType = BELONGS_TO_MANY_RELATION;
   }
 
   query(callback) {
