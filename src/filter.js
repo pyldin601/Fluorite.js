@@ -40,18 +40,18 @@ const getOperator = (name) => {
   return ops[name];
 };
 
-export default attributes => (qb) => {
+export default (attributes, table) => (qb) => {
   for (const key of Object.keys(attributes)) {
     if (opRegExp.test(key)) {
       const [, field, op] = opRegExp.exec(key);
       const operator = getOperator(op);
       if (operator === 'IN') {
-        qb.whereIn(field, attributes[key]);
+        qb.whereIn(`${table}.${field}`, attributes[key]);
       } else {
-        qb.where(field, operator, attributes[key]);
+        qb.where(`${table}.${field}`, operator, attributes[key]);
       }
     } else {
-      qb.where(key, defaultOp, attributes[key]);
+      qb.where(`${table}.${key}`, defaultOp, attributes[key]);
     }
   }
 };

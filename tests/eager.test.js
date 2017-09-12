@@ -149,16 +149,12 @@ describe('Eager Function Tests', () => {
   });
 
   it('Fetch user with single relation', async () => {
-    const user = await User.find(1).including('things');
+    const user = await User.find(1).including('place');
     expect(user.toJSON()).toEqual({
       id: 1,
       name: 'John Doe',
       place_id: 1,
-      things: [
-        {
-          id: 1,
-        },
-      ],
+      place: {},
     });
   });
 });

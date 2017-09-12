@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { first, isEmpty, flatMap } from 'lodash';
+import { first, last, isEmpty, flatMap } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
 import filter from './filter';
 import { createModelRelationsMap } from './eager';
@@ -53,28 +53,9 @@ class BaseQuery {
     }
   }
 
-  buildRelationMap() {
-    const table = this.modelClass.table;
-    const columns = this.modelClass.columns;
-    return [
-      { table, columns },
-    ];
-  }
-
   makeModel(rowData) {
-    const deflated = this.extractRelationData(rowData, this.relationsMap, ['root']);
+    const deflated = this.extractRelationData(rowData, this.relationsMap, []);
     return this.fluorite.wrapModel(deflated, this.modelClass);
-  }
-
-  buildSelect() {
-    return flatMap(
-      this.relationsMap,
-      ({ table, columns }, tableIndex) => (
-        columns.map((column, columnIndex) => (
-          `${table}.${column} as __rel${tableIndex}__col${columnIndex}`
-        ))
-      ),
-    );
   }
 
   prepareQuery() {
@@ -92,7 +73,7 @@ class BaseQuery {
   }
 
   filter(attributes) {
-    return this.query(filter(attributes));
+    return this.query(filter(attributes, this.modelClass.table));
   }
 
   query(callback) {
@@ -133,18 +114,30 @@ class BaseQuery {
     await this.prepareQuery().delete();
   }
 
-  applySingleRelation(query, { table, columns, type }, path) {
-    const prefix = (type === 'root' ? '__' : `__${path.join('__')}`);
-    const toSelect = columns.map(column => `${table}.${column} as ${prefix}${column}`);
-    query.select(toSelect);
+  applyRelation(query, relationData, path, parent = null) {
+    const { table, columns, type, relations } = relationData;
+
+    if (path.length === 0) {
+      const toSelect = columns.map(column => `${table}.${column} as __${column}`);
+      query.select(toSelect);
+    } else if (type === 'belongsTo') {
+      const toSelect = columns.map(column => `${table}.${column} as __${path.join('__')}__${column}`);
+      query.select(toSelect);
+      query.innerJoin(table, `${table}.id`, `${parent.table}.${last(path)}_id`);
+    }
+
+    Object.keys(relations).forEach(
+      relationName => this.applyRelation(
+        query, relations[relationName], [...path, relationName], relationData,
+      ),
+    );
   }
 
   extractRelationData(rowData, { columns, type }, path) {
-    const prefix = (type === 'root' ? '__' : `__${path.join('__')}`);
     return columns.reduce(
       (acc, column) => ({
         ...acc,
-        [column]: rowData[`${prefix}${column}`],
+        [column]: rowData[`__${column}`],
       }),
       {},
     );
@@ -152,12 +145,13 @@ class BaseQuery {
 
   applyRelationsToQuery(query) {
     query.clearSelect();
-    this.applySingleRelation(query, this.relationsMap, ['root']);
+    this.applyRelation(query, this.relationsMap, []);
   }
 
   async prepareSelectQuery() {
     const query = this.prepareQuery();
     this.applyRelationsToQuery(query);
+    console.log(query.toString());
     return query;
   }
 
