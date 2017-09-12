@@ -62,7 +62,7 @@ class BaseQuery {
   makeModel(rowData) {
     const deflated = this.deflateRowData(rowData);
     const modelData = deflated[this.modelClass.table];
-    return this.fluorite.wrapModel(modelData);
+    return this.fluorite.wrapModel(modelData, this.modelClass);
   }
 
   buildSelect() {
