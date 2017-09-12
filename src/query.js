@@ -19,9 +19,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { first, isEmpty } from 'lodash';
+
+import { first, isEmpty, isNull, flatMap } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
 import filter from './filter';
+
+const relatedRegExp = /^__rel(\d+)__col(\d+)$/;
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
@@ -31,6 +34,10 @@ class BaseQuery {
   constructor(modelClass, filters = []) {
     this.modelClass = modelClass;
     this.filters = filters;
+    this.fluorite = modelClass.fluorite;
+    this.transaction = this.fluorite.transaction;
+
+    this.relMap = this.buildRelationMap();
 
     this.applyScopes();
 
@@ -44,6 +51,30 @@ class BaseQuery {
     }
   }
 
+  buildRelationMap() {
+    const table = this.modelClass.table;
+    const columns = this.modelClass.columns;
+    return [
+      { table, columns },
+    ];
+  }
+
+  buildSelect() {
+    return flatMap(
+      this.relMap,
+      ({ table, columns }, tableIndex) => (
+        columns.map((column, columnIndex) => `${table}.${column} as __rel${tableIndex}__col${columnIndex}`)
+      ),
+    );
+  }
+
+  parseRowData(rowData) {
+    return Object.keys(rowData).reduce((acc, key) => {
+      const [, tableIndex, columnIndex] = key.match(relatedRegExp);
+      return { ...acc, [this.relMap[tableIndex].columns[columnIndex]]: rowData[key] };
+    }, {});
+  }
+
   prepareQuery() {
     const knexQuery = this.knexQueryTransacting();
     this.filters.forEach(f => f(knexQuery));
@@ -51,8 +82,8 @@ class BaseQuery {
   }
 
   knexQueryTransacting() {
-    if (this.modelClass.fluorite.transaction.isTransacting()) {
-      return this.modelClass.fluorite.transaction.currentTransaction().from(this.modelClass.table);
+    if (this.transaction.isTransacting()) {
+      return this.transaction.currentTransaction().from(this.modelClass.table);
     }
 
     return this.modelClass.knex(this.modelClass.table);
@@ -109,8 +140,16 @@ class BaseQuery {
 
 export class SingleRowQuery extends BaseQuery {
   async eval() {
+    const select = this.buildSelect();
+    const query = this.prepareQuery();
+
+    query.clearSelect();
+    query.select(select);
+
+    console.log(query.toString());
+
     const fluorite = this.modelClass.fluorite;
-    const rows = await this.prepareQuery();
+    const rows = (await query).map(row => this.parseRowData(row));
 
     if (rows.length === 1) {
       return fluorite.wrapModel(first(rows), this.modelClass);
@@ -162,10 +201,15 @@ export class MultipleRowsQuery extends BaseQuery {
   }
 
   async eval() {
+    const query = this.prepareQuery();
+    const select = this.buildSelect();
+
+    query.clearSelect();
+    query.select(select);
+
     const fluorite = this.modelClass.fluorite;
-    return this
-      .prepareQuery()
-      .select()
+    return query
+      .then(rows => rows.map(row => this.parseRowData(row)))
       .then(rows => rows.map(row => fluorite.wrapModel(row, this.modelClass)));
   }
 
