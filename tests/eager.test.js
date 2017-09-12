@@ -85,6 +85,7 @@ describe('Eager Function Tests', () => {
   it('Create simple model relations map', () => {
     const relationsMap = createModelRelationsMap(User);
     expect(relationsMap).toEqual({
+      type: 'root',
       table: 'users',
       columns: ['id', 'name', 'place_id'],
       relations: {},
@@ -94,10 +95,12 @@ describe('Eager Function Tests', () => {
   it('Create model relations map with single relation', () => {
     const relationsMap = createModelRelationsMap(User, ['things']);
     expect(relationsMap).toEqual({
+      type: 'root',
       table: 'users',
       columns: ['id', 'name', 'place_id'],
       relations: {
         things: {
+          type: 'hasMany',
           table: 'things',
           columns: ['id', 'title', 'user_id'],
           relations: {},
@@ -109,19 +112,23 @@ describe('Eager Function Tests', () => {
   it('Create model relations map with multiple nested relations', () => {
     const relationsMap = createModelRelationsMap(User, ['things', 'place.address']);
     expect(relationsMap).toEqual({
+      type: 'root',
       table: 'users',
       columns: ['id', 'name', 'place_id'],
       relations: {
         things: {
+          type: 'hasMany',
           table: 'things',
           columns: ['id', 'title', 'user_id'],
           relations: {},
         },
         place: {
+          type: 'belongsTo',
           table: 'places',
           columns: ['id', 'place', 'address_id'],
           relations: {
             address: {
+              type: 'belongsTo',
               table: 'addresses',
               columns: ['id', 'address'],
               relations: {},

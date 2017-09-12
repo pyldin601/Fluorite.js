@@ -30,6 +30,7 @@ export class BelongsTo extends SingleRowQuery {
     foreignKeyTarget,
   ) {
     super(relatedClass, [qb => qb.where({ [foreignKeyTarget]: sourceEntity.get(foreignKey) })]);
+    this.relationType = 'belongsTo';
   }
 
   query(callback) {
@@ -45,6 +46,7 @@ export class HasMany extends MultipleRowsQuery {
     foreignKeyTarget,
   ) {
     super(relatedClass, [qb => qb.where({ [foreignKey]: sourceEntity.get(foreignKeyTarget) })]);
+    this.relationType = 'hasMany';
   }
 
   query(callback) {
@@ -71,6 +73,7 @@ export class BelongsToMany extends MultipleRowsQuery {
       .select(`${relatedClass.table}.*`)
       .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
     ]);
+    this.relationType = 'belongsToMany';
   }
 
   query(callback) {

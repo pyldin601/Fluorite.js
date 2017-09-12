@@ -49,13 +49,14 @@
 
 import { isNil, isFunction } from 'lodash';
 
-export const createModelRelationsMap = (ModelClass, relations = []) => {
+export const createModelRelationsMapInner = (ModelClass, relationType = 'root', restRelations = []) => {
   const model = new ModelClass();
 
   return {
+    type: relationType,
     table: ModelClass.table,
     columns: ModelClass.columns,
-    relations: relations.reduce((acc, relation) => {
+    relations: restRelations.reduce((acc, relation) => {
       const [head, tail] = relation.split('.', 2);
       const rest = isNil(tail) ? [] : [tail];
 
@@ -75,8 +76,16 @@ export const createModelRelationsMap = (ModelClass, relations = []) => {
 
       return {
         ...acc,
-        [head]: createModelRelationsMap(relationQuery.modelClass, rest),
+        [head]: createModelRelationsMapInner(
+          relationQuery.modelClass,
+          relationQuery.relationType,
+          rest,
+        ),
       };
     }, {}),
   };
 };
+
+export const createModelRelationsMap = (ModelClass, restRelations = []) => (
+  createModelRelationsMapInner(ModelClass, 'root', restRelations)
+);
