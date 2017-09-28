@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { pickBy, isNil, last, isEmpty, sortBy } from 'lodash';
+import { pickBy, isNil, last, isEmpty, sortBy, mapValues } from 'lodash';
 import { MultipleRowsQuery } from './query';
 import errors from './errors';
 import { BelongsTo, BelongsToMany, HasMany } from './relations';
@@ -57,6 +57,7 @@ export default fluorite => class Model {
   constructor(attributes, previousAttributes = {}) {
     this.attributes = attributes;
     this.previousAttributes = previousAttributes;
+    this.relatedModels = {};
   }
 
   get id() {
@@ -95,16 +96,16 @@ export default fluorite => class Model {
     return this.attributes[name];
   }
 
+  related(name) {
+    return this.relatedModels[name];
+  }
+
   set(name, value) {
     if (name instanceof Object) {
       this.attributes = { ...this.attributes, ...name };
       return;
     }
     this.attributes[name] = value;
-  }
-
-  serialize() {
-    return this.attributes;
   }
 
   hasMany(
@@ -143,7 +144,17 @@ export default fluorite => class Model {
   }
 
   toJSON() {
-    return this.serialize();
+    return {
+      ...this.attributes,
+      ...mapValues(
+        this.relatedModels,
+        modelOrModels => (
+          Array.isArray(modelOrModels)
+            ? modelOrModels.map(m => m.toJSON())
+            : modelOrModels.toJSON()
+        ),
+      ),
+    };
   }
 
   /*
@@ -193,5 +204,9 @@ export default fluorite => class Model {
       .update(updatedAttributes)
       .where({ [this.constructor.idAttribute]: this.id });
     this.previousAttributes = this.attributes;
+  }
+
+  setRelatedData(name, data) {
+    this.relatedModels[name] = data;
   }
 };

@@ -1,6 +1,5 @@
 import knex from './services/knex';
 import fluorite from './services/fluorite';
-import { createModelRelationsMap } from '../src/eager';
 
 class Address extends fluorite.Model {
   static table = 'addresses';
@@ -46,7 +45,7 @@ beforeEach(async () => {
   await knex.schema.createTable('places', (table) => {
     table.increments();
     table.string('place').notNullable();
-    table.string('address_id').unsigned().notNullable().references('addresses.id');
+    table.integer('address_id').unsigned().notNullable().references('addresses.id');
   });
 
   await knex('places').insert({ id: 1, place: 'Home', address_id: 1 });
@@ -82,63 +81,6 @@ afterEach(async () => {
 
 
 describe('Eager Function Tests', () => {
-  it('Create simple model relations map', () => {
-    const relationsMap = createModelRelationsMap(User);
-    expect(relationsMap).toEqual({
-      type: 'root',
-      table: 'users',
-      columns: ['id', 'name', 'place_id'],
-      relations: {},
-    });
-  });
-
-  it('Create model relations map with single relation', () => {
-    const relationsMap = createModelRelationsMap(User, ['things']);
-    expect(relationsMap).toEqual({
-      type: 'root',
-      table: 'users',
-      columns: ['id', 'name', 'place_id'],
-      relations: {
-        things: {
-          type: 'hasMany',
-          table: 'things',
-          columns: ['id', 'title', 'user_id'],
-          relations: {},
-        },
-      },
-    });
-  });
-
-  it('Create model relations map with multiple nested relations', () => {
-    const relationsMap = createModelRelationsMap(User, ['things', 'place.address']);
-    expect(relationsMap).toEqual({
-      type: 'root',
-      table: 'users',
-      columns: ['id', 'name', 'place_id'],
-      relations: {
-        things: {
-          type: 'hasMany',
-          table: 'things',
-          columns: ['id', 'title', 'user_id'],
-          relations: {},
-        },
-        place: {
-          type: 'belongsTo',
-          table: 'places',
-          columns: ['id', 'place', 'address_id'],
-          relations: {
-            address: {
-              type: 'belongsTo',
-              table: 'addresses',
-              columns: ['id', 'address'],
-              relations: {},
-            },
-          },
-        },
-      },
-    });
-  });
-
   it('Fetch user without relations', async () => {
     const user = await User.find(1);
     expect(user.toJSON()).toEqual({
@@ -154,7 +96,52 @@ describe('Eager Function Tests', () => {
       id: 1,
       name: 'John Doe',
       place_id: 1,
-      place: {},
+      place: {
+        address_id: 1,
+        id: 1,
+        place: 'Home',
+      },
+    });
+  });
+
+  it('Fetch user with nested relation', async () => {
+    const user = await User.find(1).including('place.address', 'things');
+    expect(user.toJSON()).toEqual({
+      id: 1,
+      name: 'John Doe',
+      place_id: 1,
+      place: {
+        address_id: 1,
+        id: 1,
+        place: 'Home',
+        address: {
+          id: 1,
+          address: 'Peschanaya',
+        },
+      },
+      things: [
+        { id: 1, title: 'Book', user_id: 1 },
+        { id: 2, title: 'Pen', user_id: 1 },
+      ],
+    });
+  });
+
+
+  it('Fetch user with all relations', async () => {
+    const user = await User.find(1).including('place.address');
+    expect(user.toJSON()).toEqual({
+      id: 1,
+      name: 'John Doe',
+      place_id: 1,
+      place: {
+        address_id: 1,
+        id: 1,
+        place: 'Home',
+        address: {
+          id: 1,
+          address: 'Peschanaya',
+        },
+      },
     });
   });
 });

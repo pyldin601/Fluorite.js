@@ -19,13 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-import { first, last, isEmpty, flatMap } from 'lodash';
+import { first, isEmpty } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
 import filter from './filter';
-import { createModelRelationsMap } from './eager';
-
-const relatedRegExp = /^__rel(\d+)__col(\d+)$/;
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
@@ -38,8 +34,6 @@ class BaseQuery {
     this.relationNames = relationNames;
     this.fluorite = modelClass.fluorite;
     this.transaction = this.fluorite.transaction;
-
-    this.relationsMap = createModelRelationsMap(modelClass, this.relationNames);
 
     this.applyScopes();
 
@@ -54,8 +48,8 @@ class BaseQuery {
   }
 
   makeModel(rowData) {
-    const deflated = this.extractRelationData(rowData, this.relationsMap, []);
-    return this.fluorite.wrapModel(deflated, this.modelClass);
+    // const deflated = this.extractRelationData(rowData, this.relationsMap, []);
+    return this.fluorite.wrapModel(rowData, this.modelClass);
   }
 
   prepareQuery() {
@@ -114,45 +108,8 @@ class BaseQuery {
     await this.prepareQuery().delete();
   }
 
-  applyRelation(query, relationData, path, parent = null) {
-    const { table, columns, type, relations } = relationData;
-
-    if (path.length === 0) {
-      const toSelect = columns.map(column => `${table}.${column} as __${column}`);
-      query.select(toSelect);
-    } else if (type === 'belongsTo') {
-      const toSelect = columns.map(column => `${table}.${column} as __${path.join('__')}__${column}`);
-      query.select(toSelect);
-      query.innerJoin(table, `${table}.id`, `${parent.table}.${last(path)}_id`);
-    }
-
-    Object.keys(relations).forEach(
-      relationName => this.applyRelation(
-        query, relations[relationName], [...path, relationName], relationData,
-      ),
-    );
-  }
-
-  extractRelationData(rowData, { columns, type }, path) {
-    return columns.reduce(
-      (acc, column) => ({
-        ...acc,
-        [column]: rowData[`__${column}`],
-      }),
-      {},
-    );
-  }
-
-  applyRelationsToQuery(query) {
-    query.clearSelect();
-    this.applyRelation(query, this.relationsMap, []);
-  }
-
   async prepareSelectQuery() {
-    const query = this.prepareQuery();
-    this.applyRelationsToQuery(query);
-    console.log(query.toString());
-    return query;
+    return this.prepareQuery();
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -177,7 +134,15 @@ export class SingleRowQuery extends BaseQuery {
     const rows = (await query);
 
     if (rows.length === 1) {
-      return this.makeModel(first(rows));
+      const model = this.makeModel(first(rows));
+
+      await Promise.all(this.relationNames.map((name) => {
+        const [head, tail] = name.split('.', 2);
+        const relation = model[head]();
+        return relation.extractRelatedData(rows, head, [model], tail);
+      }));
+
+      return model;
     }
 
     if (rows.length === 0) {
@@ -228,7 +193,22 @@ export class MultipleRowsQuery extends BaseQuery {
   async eval() {
     const query = this.prepareSelectQuery();
 
-    return query.then(rows => rows.map(row => this.makeModel(row)));
+    return query
+      .then(async (rows) => {
+        if (rows.length === 0) {
+          return [];
+        }
+
+        const models = rows.map(row => this.makeModel(row));
+        const firstModel = first(models);
+
+        await Promise.all(this.relationNames.map((name) => {
+          const relation = firstModel[name]();
+          return relation.extractRelatedData(rows, name, models);
+        }));
+
+        return models;
+      });
   }
 
   [Symbol.asyncIterator]() {
