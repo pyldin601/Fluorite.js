@@ -145,8 +145,7 @@ const irishes = await User.objects.filter({ name__like: 'Mac%' });
 ```javascript
 const adultFemales = await User.objects
   .filter({ age__gte: 18 })
-  .filter({ gender: 'female' })
-  .all();
+  .filter({ gender: 'female' });
 ```
 
 All filters are **immutable**. Each time you refine your criteria you get new copy of query.
