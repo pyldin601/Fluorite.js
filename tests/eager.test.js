@@ -4,6 +4,10 @@ import fluorite from './services/fluorite';
 class Address extends fluorite.Model {
   static table = 'addresses';
   static columns = ['id', 'address'];
+
+  places() {
+    return this.hasMany(Place);
+  }
 }
 
 class Place extends fluorite.Model {
@@ -13,11 +17,20 @@ class Place extends fluorite.Model {
   address() {
     return this.belongsTo(Address);
   }
+
+  users() {
+    return this.hasMany(User);
+  }
 }
 
 class Thing extends fluorite.Model {
   static table = 'things';
   static columns = ['id', 'title', 'user_id'];
+}
+
+class Club extends fluorite.Model {
+  static table = 'clubs';
+  static columns = ['id', 'title'];
 }
 
 class User extends fluorite.Model {
@@ -30,6 +43,10 @@ class User extends fluorite.Model {
 
   place() {
     return this.belongsTo(Place);
+  }
+
+  clubs() {
+    return this.belongsToMany(Club);
   }
 }
 
@@ -70,9 +87,32 @@ beforeEach(async () => {
   await knex('things').insert({ id: 1, title: 'Book', user_id: 1 });
   await knex('things').insert({ id: 2, title: 'Pen', user_id: 1 });
   await knex('things').insert({ id: 3, title: 'Phone', user_id: 2 });
+
+  await knex.schema.createTable('clubs', (table) => {
+    table.increments();
+    table.string('title').notNullable();
+  });
+
+  await knex('clubs').insert({ id: 1, title: 'Readers Club' });
+  await knex('clubs').insert({ id: 2, title: 'Vegan Club' });
+  await knex('clubs').insert({ id: 3, title: 'Night Club' });
+
+  await knex.schema.createTable('clubs_users', (table) => {
+    table.increments();
+    table.string('user_id').unsigned().notNullable().references('users.id');
+    table.string('club_id').unsigned().notNullable().references('clubs.id');
+  });
+
+  await knex('clubs_users').insert({ user_id: 1, club_id: 1 });
+  await knex('clubs_users').insert({ user_id: 1, club_id: 2 });
+  await knex('clubs_users').insert({ user_id: 1, club_id: 3 });
+  await knex('clubs_users').insert({ user_id: 2, club_id: 1 });
+  await knex('clubs_users').insert({ user_id: 2, club_id: 3 });
 });
 
 afterEach(async () => {
+  await knex.schema.dropTable('clubs_users');
+  await knex.schema.dropTable('clubs');
   await knex.schema.dropTable('things');
   await knex.schema.dropTable('users');
   await knex.schema.dropTable('places');
@@ -142,6 +182,39 @@ describe('Eager Function Tests', () => {
           address: 'Peschanaya',
         },
       },
+    });
+  });
+
+  it('Test "Belongs To Many" eager load', async () => {
+    const user = await User.find(1).including('clubs');
+    expect(user.toJSON()).toEqual({
+      id: 1,
+      name: 'John Doe',
+      place_id: 1,
+      clubs: [
+        { id: 1, title: 'Readers Club' },
+        { id: 2, title: 'Vegan Club' },
+        { id: 3, title: 'Night Club' },
+      ],
+    });
+  });
+
+  it('Test "Has Many" eager load', async () => {
+    const address = await Address.find(1).including('places.users');
+    expect(address.toJSON()).toEqual({
+      id: 1,
+      address: 'Peschanaya',
+      places: [
+        {
+          id: 1,
+          address_id: 1,
+          place: 'Home',
+          users: [
+            { id: 1, name: 'John Doe', place_id: 1 },
+            { id: 2, name: 'Bob Marley', place_id: 1 },
+          ],
+        },
+      ],
     });
   });
 });

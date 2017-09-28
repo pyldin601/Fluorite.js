@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { pickBy, isNil, last, isEmpty, sortBy, mapValues } from 'lodash';
+import { pickBy, isNil, last, isEmpty, sortBy, mapValues, startsWith } from 'lodash';
 import { MultipleRowsQuery } from './query';
 import errors from './errors';
 import { BelongsTo, BelongsToMany, HasMany } from './relations';
@@ -145,7 +145,10 @@ export default fluorite => class Model {
 
   toJSON() {
     return {
-      ...this.attributes,
+      ...pickBy(
+        this.attributes,
+        (val, key) => !startsWith(key, '__'),
+      ),
       ...mapValues(
         this.relatedModels,
         modelOrModels => (

@@ -19,9 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { first, isEmpty } from 'lodash';
+import { first, isEmpty, pickBy, startsWith } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
-import filter from './filter';
+import filterQuery from './filter';
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
@@ -48,7 +48,6 @@ class BaseQuery {
   }
 
   makeModel(rowData) {
-    // const deflated = this.extractRelationData(rowData, this.relationsMap, []);
     return this.fluorite.wrapModel(rowData, this.modelClass);
   }
 
@@ -67,7 +66,7 @@ class BaseQuery {
   }
 
   filter(attributes) {
-    return this.query(filter(attributes, this.modelClass.table));
+    return this.query(filterQuery(attributes, this.modelClass.table));
   }
 
   query(callback) {
@@ -109,7 +108,28 @@ class BaseQuery {
   }
 
   async prepareSelectQuery() {
-    return this.prepareQuery();
+    const query = this.prepareQuery();
+    query.select(`${this.modelClass.table}.*`);
+    return query;
+  }
+
+  async createModels(rowData) {
+    if (rowData.length === 0) {
+      return [];
+    }
+
+    const ModelClass = this.modelClass;
+    const models = rowData.map(
+      row => new ModelClass(row, Object.assign({}, row)),
+    );
+
+    await Promise.all(this.relationNames.map((name) => {
+      const [head, tail] = name.split('.', 2);
+      const relation = first(models)[head]();
+      return relation.extractRelatedData(rowData, head, models, tail);
+    }));
+
+    return models;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -131,21 +151,14 @@ export class SingleRowQuery extends BaseQuery {
   async eval() {
     const query = this.prepareSelectQuery();
 
-    const rows = (await query);
+    const rowData = await query;
 
-    if (rows.length === 1) {
-      const model = this.makeModel(first(rows));
-
-      await Promise.all(this.relationNames.map((name) => {
-        const [head, tail] = name.split('.', 2);
-        const relation = model[head]();
-        return relation.extractRelatedData(rows, head, [model], tail);
-      }));
-
-      return model;
+    if (rowData.length === 1) {
+      return this.createModels(rowData)
+        .then(models => first(models));
     }
 
-    if (rows.length === 0) {
+    if (rowData.length === 0) {
       throw new this.modelClass.NotFoundError('Entity not found');
     }
 
@@ -193,22 +206,9 @@ export class MultipleRowsQuery extends BaseQuery {
   async eval() {
     const query = this.prepareSelectQuery();
 
-    return query
-      .then(async (rows) => {
-        if (rows.length === 0) {
-          return [];
-        }
+    const rowData = await query;
 
-        const models = rows.map(row => this.makeModel(row));
-        const firstModel = first(models);
-
-        await Promise.all(this.relationNames.map((name) => {
-          const relation = firstModel[name]();
-          return relation.extractRelatedData(rows, name, models);
-        }));
-
-        return models;
-      });
+    return this.createModels(rowData);
   }
 
   [Symbol.asyncIterator]() {

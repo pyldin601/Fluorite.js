@@ -52,11 +52,12 @@ export class BelongsTo extends SingleRowQuery {
     );
   }
 
-  async extractRelatedData(rows, relationName, models, nestedRelations) {
+  async extractRelatedData(rowData, relationName, models, nestedRelations) {
     const that = this;
-    const ids = rows.map(row => row[that.foreignKey]);
+    const ids = rowData.map(row => row[that.foreignKey]);
 
-    let query = this.modelClass.objects
+    let query = this.modelClass
+      .objects
       .filter({ id__in: ids });
 
     if (nestedRelations) {
@@ -73,7 +74,7 @@ export class BelongsTo extends SingleRowQuery {
       return model.setRelatedData(relationName, relatedModel);
     });
 
-    return rows;
+    return rowData;
   }
 }
 
@@ -103,7 +104,8 @@ export class HasMany extends MultipleRowsQuery {
     const that = this;
     const ids = rows.map(row => row.id);
 
-    let query = this.modelClass.objects
+    let query = this.modelClass
+      .objects
       .filter({ [`${this.foreignKey}__in`]: ids });
 
     if (nestedRelations) {
@@ -162,8 +164,10 @@ export class BelongsToMany extends MultipleRowsQuery {
   async extractRelatedData(rows, relationName, models, nestedRelations) {
     const that = this;
     const ids = rows.map(row => row.id);
+    const tempColumnName = '__related_id';
 
     let query = this.modelClass
+      .objects
       .query(qb => (
         qb
           .innerJoin(
@@ -171,8 +175,8 @@ export class BelongsToMany extends MultipleRowsQuery {
             `${that.pivotTableName}.${that.thatForeignKey}`,
             `${that.modelClass.table}.${that.thatForeignKeyTarget}`,
           )
-          .whereIn(`${that.pivotTableName}.${that.thatForeignKey}`, ids)
-          .select(`${that.pivotTableName}.${that.thatForeignKey} as __pivot_related_id`)
+          .whereIn(`${that.pivotTableName}.${that.thisForeignKey}`, ids)
+          .select(`${that.pivotTableName}.${that.thisForeignKey} as ${tempColumnName}`)
       ));
 
     if (nestedRelations) {
@@ -183,7 +187,7 @@ export class BelongsToMany extends MultipleRowsQuery {
 
     models.map((model) => {
       const filteredModels = relatedModels.filter(
-        m => unsafe.eq(m.get('__pivot_related_id'), model.id),
+        m => unsafe.eq(m.get(tempColumnName), model.id),
       );
       return model.setRelatedData(relationName, filteredModels);
     });

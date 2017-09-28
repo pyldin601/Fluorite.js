@@ -28,6 +28,7 @@ const ops = {
   lt: '<',
   lte: '<=',
   in: 'IN',
+  like: 'LIKE',
 };
 
 const opRegExp = /^(.+)__(.+)$/;
