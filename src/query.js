@@ -21,16 +21,19 @@
  */
 import { first, isEmpty } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
-import filter from './filter';
+import filterQuery from './filter';
 
 const getValue = qb => (
   qb.first().then(row => first(Object.values(row)))
 );
 
 class BaseQuery {
-  constructor(modelClass, filters = []) {
+  constructor(modelClass, filters = [], relationNames = []) {
     this.modelClass = modelClass;
     this.filters = filters;
+    this.relationNames = relationNames;
+    this.fluorite = modelClass.fluorite;
+    this.transaction = this.fluorite.transaction;
 
     this.applyScopes();
 
@@ -44,6 +47,10 @@ class BaseQuery {
     }
   }
 
+  makeModel(rowData) {
+    return this.fluorite.wrapModel(rowData, this.modelClass);
+  }
+
   prepareQuery() {
     const knexQuery = this.knexQueryTransacting();
     this.filters.forEach(f => f(knexQuery));
@@ -51,19 +58,27 @@ class BaseQuery {
   }
 
   knexQueryTransacting() {
-    if (this.modelClass.fluorite.transaction.isTransacting()) {
-      return this.modelClass.fluorite.transaction.currentTransaction().from(this.modelClass.table);
+    if (this.transaction.isTransacting()) {
+      return this.transaction.currentTransaction().from(this.modelClass.table);
     }
 
     return this.modelClass.knex(this.modelClass.table);
   }
 
   filter(attributes) {
-    return this.query(filter(attributes));
+    return this.query(filterQuery(attributes, this.modelClass.table));
   }
 
   query(callback) {
-    return new this.constructor(this.modelClass, [...this.filters, callback]);
+    return new this.constructor(
+      this.modelClass, [...this.filters, callback], this.relationNames,
+    );
+  }
+
+  including(...relationNames) {
+    return new this.constructor(
+      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+    );
   }
 
   toString() {
@@ -92,6 +107,31 @@ class BaseQuery {
     await this.prepareQuery().delete();
   }
 
+  async prepareSelectQuery() {
+    const query = this.prepareQuery();
+    query.select(`${this.modelClass.table}.*`);
+    return query;
+  }
+
+  async createModels(rowData) {
+    if (rowData.length === 0) {
+      return [];
+    }
+
+    const ModelClass = this.modelClass;
+    const models = rowData.map(
+      row => new ModelClass(row, Object.assign({}, row)),
+    );
+
+    await Promise.all(this.relationNames.map((name) => {
+      const [head, tail] = name.split('.', 2);
+      const relation = first(models)[head]();
+      return relation.extractRelatedData(rowData, head, models, tail);
+    }));
+
+    return models;
+  }
+
   // eslint-disable-next-line class-methods-use-this
   async eval() {
     throw new Error('Method not implemented');
@@ -109,14 +149,16 @@ class BaseQuery {
 
 export class SingleRowQuery extends BaseQuery {
   async eval() {
-    const fluorite = this.modelClass.fluorite;
-    const rows = await this.prepareQuery();
+    const query = this.prepareSelectQuery();
 
-    if (rows.length === 1) {
-      return fluorite.wrapModel(first(rows), this.modelClass);
+    const rowData = await query;
+
+    if (rowData.length === 1) {
+      return this.createModels(rowData)
+        .then(models => first(models));
     }
 
-    if (rows.length === 0) {
+    if (rowData.length === 0) {
       throw new this.modelClass.NotFoundError('Entity not found');
     }
 
@@ -162,24 +204,20 @@ export class MultipleRowsQuery extends BaseQuery {
   }
 
   async eval() {
-    const fluorite = this.modelClass.fluorite;
-    return this
-      .prepareQuery()
-      .select()
-      .then(rows => rows.map(row => fluorite.wrapModel(row, this.modelClass)));
+    const query = this.prepareSelectQuery();
+
+    const rowData = await query;
+
+    return this.createModels(rowData);
   }
 
   [Symbol.asyncIterator]() {
-    const modelClass = this.modelClass;
-    const stream = this
-      .prepareQuery()
-      .select()
-      .stream();
+    const query = this.prepareSelectQuery();
 
     return async function* asyncIterator() {
-      for await (const rowData of new StreamToAsync(stream)) {
-        yield modelClass.fluorite.wrapModel(rowData, modelClass);
+      for await (const rowData of new StreamToAsync(query.stream())) {
+        yield this.makeModel(rowData);
       }
-    };
+    }.bind(this);
   }
 }

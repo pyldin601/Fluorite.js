@@ -20,7 +20,13 @@
  * SOFTWARE.
  */
 
+import { find } from 'lodash';
 import { SingleRowQuery, MultipleRowsQuery } from './query';
+import * as unsafe from './util/unsafe';
+
+export const BELONGS_TO_RELATION = 'belongsTo';
+export const HAS_MANY_RELATION = 'hasMany';
+export const BELONGS_TO_MANY_RELATION = 'belongsToMany';
 
 export class BelongsTo extends SingleRowQuery {
   constructor(
@@ -29,13 +35,46 @@ export class BelongsTo extends SingleRowQuery {
     foreignKey,
     foreignKeyTarget,
   ) {
-    super(relatedClass);
+    super(relatedClass, [qb => qb.where({ [foreignKeyTarget]: sourceEntity.get(foreignKey) })]);
+    this.relationType = BELONGS_TO_RELATION;
 
-    return this.filter({ [foreignKeyTarget]: sourceEntity.get(foreignKey) });
+    this.foreignKey = foreignKey;
+    this.foreignKeyTarget = foreignKeyTarget;
   }
 
   query(callback) {
-    return new SingleRowQuery(this.modelClass, [callback]);
+    return new SingleRowQuery(this.modelClass, [...this.filters, callback], this.relationNames);
+  }
+
+  including(...relationNames) {
+    return new SingleRowQuery(
+      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+    );
+  }
+
+  async extractRelatedData(rowData, relationName, models, nestedRelations) {
+    const that = this;
+    const ids = rowData.map(row => row[that.foreignKey]);
+
+    let query = this.modelClass
+      .objects
+      .filter({ id__in: ids });
+
+    if (nestedRelations) {
+      query = query.including(nestedRelations);
+    }
+
+    const relatedModels = await query;
+
+    models.map((model) => {
+      const relatedModel = find(
+        relatedModels,
+        m => unsafe.eq(m.get(that.foreignKeyTarget), model.id),
+      );
+      return model.setRelatedData(relationName, relatedModel);
+    });
+
+    return rowData;
   }
 }
 
@@ -46,13 +85,43 @@ export class HasMany extends MultipleRowsQuery {
     foreignKey,
     foreignKeyTarget,
   ) {
-    super(relatedClass);
-
-    return this.filter({ [foreignKey]: sourceEntity.get(foreignKeyTarget) });
+    super(relatedClass, [qb => qb.where({ [foreignKey]: sourceEntity.get(foreignKeyTarget) })]);
+    this.relationType = HAS_MANY_RELATION;
+    this.foreignKey = foreignKey;
   }
 
   query(callback) {
-    return new MultipleRowsQuery(this.modelClass, [callback]);
+    return new MultipleRowsQuery(this.modelClass, [...this.filters, callback], this.relationNames);
+  }
+
+  including(...relationNames) {
+    return new MultipleRowsQuery(
+      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+    );
+  }
+
+  async extractRelatedData(rows, relationName, models, nestedRelations) {
+    const that = this;
+    const ids = rows.map(row => row.id);
+
+    let query = this.modelClass
+      .objects
+      .filter({ [`${this.foreignKey}__in`]: ids });
+
+    if (nestedRelations) {
+      query = query.including(nestedRelations);
+    }
+
+    const relatedModels = await query;
+
+    models.map((model) => {
+      const filteredModels = relatedModels.filter(
+        m => unsafe.eq(m.get(that.foreignKey), model.id),
+      );
+      return model.setRelatedData(relationName, filteredModels);
+    });
+
+    return rows;
   }
 }
 
@@ -66,21 +135,63 @@ export class BelongsToMany extends MultipleRowsQuery {
     thisForeignKeyTarget,
     thatForeignKeyTarget,
   ) {
-    super(relatedClass);
-
-    return this
-      .query(q => q
-        .innerJoin(
-          pivotTableName,
-          `${pivotTableName}.${thatForeignKey}`,
-          `${relatedClass.table}.${thatForeignKeyTarget}`,
-        )
-        .select(`${relatedClass.table}.*`)
-        .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
-      );
+    super(relatedClass, [qb => qb
+      .innerJoin(
+        pivotTableName,
+        `${pivotTableName}.${thatForeignKey}`,
+        `${relatedClass.table}.${thatForeignKeyTarget}`,
+      )
+      .select(`${relatedClass.table}.*`)
+      .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
+    ]);
+    this.relationType = BELONGS_TO_MANY_RELATION;
+    this.pivotTableName = pivotTableName;
+    this.thisForeignKey = thisForeignKey;
+    this.thatForeignKey = thatForeignKey;
+    this.thatForeignKeyTarget = thatForeignKeyTarget;
   }
 
   query(callback) {
-    return new MultipleRowsQuery(this.modelClass, [callback]);
+    return new MultipleRowsQuery(this.modelClass, [...this.filters, callback], this.relationNames);
+  }
+
+  including(...relationNames) {
+    return new MultipleRowsQuery(
+      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+    );
+  }
+
+  async extractRelatedData(rows, relationName, models, nestedRelations) {
+    const that = this;
+    const ids = rows.map(row => row.id);
+    const tempColumnName = '__related_id';
+
+    let query = this.modelClass
+      .objects
+      .query(qb => (
+        qb
+          .innerJoin(
+            that.pivotTableName,
+            `${that.pivotTableName}.${that.thatForeignKey}`,
+            `${that.modelClass.table}.${that.thatForeignKeyTarget}`,
+          )
+          .whereIn(`${that.pivotTableName}.${that.thisForeignKey}`, ids)
+          .select(`${that.pivotTableName}.${that.thisForeignKey} as ${tempColumnName}`)
+      ));
+
+    if (nestedRelations) {
+      query = query.including(nestedRelations);
+    }
+
+    const relatedModels = await query;
+
+    models.map((model) => {
+      const filteredModels = relatedModels.filter(
+        m => unsafe.eq(m.get(tempColumnName), model.id),
+      );
+      return model.setRelatedData(relationName, filteredModels);
+    });
+
+    return rows;
   }
 }
