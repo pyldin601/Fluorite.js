@@ -162,7 +162,7 @@ const nextFiveUsers = await User.object.limit(5).offset(5);
 ``` 
 
 ### Retrieve single object
-There are two different ways to retrieve single object from database.
+There are three different ways to retrieve single object from database.
 
 1. If you want to retrieve single object using primary key:
 ```javascript
