@@ -9,9 +9,9 @@ beforeEach(async () => {
     table.string('name').unsigned().notNullable();
   });
 
-  await knex('users').insert({ name: 'John Doe' });
-  await knex('users').insert({ name: 'Bob Marley' });
-  await knex('users').insert({ name: 'Billy Boy' });
+  await knex('users').insert({ id: 1, name: 'John Doe' });
+  await knex('users').insert({ id: 2, name: 'Bob Marley' });
+  await knex('users').insert({ id: 3, name: 'Billy Boy' });
 
   await knex.schema.createTable('posts', (table) => {
     table.increments();
@@ -19,9 +19,9 @@ beforeEach(async () => {
     table.integer('user_id').unsigned().notNullable().references('users.id');
   });
 
-  await knex('posts').insert({ title: 'Post #1', user_id: 1 });
-  await knex('posts').insert({ title: 'Post #2', user_id: 1 });
-  await knex('posts').insert({ title: 'Post #3', user_id: 2 });
+  await knex('posts').insert({ id: 1, title: 'Post #1', user_id: 1 });
+  await knex('posts').insert({ id: 2, title: 'Post #2', user_id: 1 });
+  await knex('posts').insert({ id: 3, title: 'Post #3', user_id: 2 });
 });
 
 afterEach(async () => {
