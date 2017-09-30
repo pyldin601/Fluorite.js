@@ -41,5 +41,16 @@
     "knex": "*",
     "lodash": "*",
     "stream-to-async-iterator": "^0.2.0"
-  }
+  },
+  "keywords": [
+    "orm",
+    "database",
+    "mysql",
+    "postgresql",
+    "sqlite",
+    "datamapper",
+    "active record",
+    "object relational mapper",
+    "es6"
+  ],
 }
