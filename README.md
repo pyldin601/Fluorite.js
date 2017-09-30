@@ -145,8 +145,7 @@ const irishes = await User.objects.filter({ name__like: 'Mac%' });
 ```javascript
 const adultFemales = await User.objects
   .filter({ age__gte: 18 })
-  .filter({ gender: 'female' })
-  .all();
+  .filter({ gender: 'female' });
 ```
 
 All filters are **immutable**. Each time you refine your criteria you get new copy of query.
@@ -163,7 +162,7 @@ const nextFiveUsers = await User.object.limit(5).offset(5);
 ``` 
 
 ### Retrieve single object
-There are two different ways to retrieve single object from database.
+There are three different ways to retrieve single object from database.
 
 1. If you want to retrieve single object using primary key:
 ```javascript
