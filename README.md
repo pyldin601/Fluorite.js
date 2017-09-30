@@ -119,7 +119,7 @@ for await (const user of User.objects) {
 To filter query result use method `filter()` passing to it object with attributes for refining. 
 
 ```javascript
-const males = await User.objects.filter({ gender: 'male' });
+const men = await User.objects.filter({ gender: 'male' });
 ```
 
 By default used `=` operator for comparing. But you alter this behavior.
