@@ -51,6 +51,8 @@
     "datamapper",
     "active record",
     "object relational mapper",
-    "es6"
+    "es6",
+    "immutable",
+    "async"
   ],
 }
