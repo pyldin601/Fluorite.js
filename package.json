@@ -1,8 +1,9 @@
 {
   "name": "fluorite",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lightweight ORM based on Knex.js query builder.",
   "main": "dist/index.js",
+  "repository": "https://github.com/pldin601/Fluorite.js",
   "engines": {
     "node": "^8"
   },
