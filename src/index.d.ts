@@ -17,6 +17,7 @@ interface Fluorite {
 declare namespace Fluorite {
   type Scope = (qb: Knex.QueryBuilder, ...args: Array<any>) => Knex.QueryBuilder;
   type Attributes = { [name: string]: any };
+  type OrderDirection = 'DESC' | 'ASC' | 'desc' | 'asc';
 
   type ModelSubclass<T extends Model<any>> = {
     new(attributes: Attributes, previousAttributes: Attributes): T;
@@ -37,11 +38,19 @@ declare namespace Fluorite {
     attributes: Attributes;
     isNew: boolean;
 
+    constructor(attributes: Attributes, previousAttributes?: Attributes);
 
     get(column: string): any;
+
     set(column: string, value: any): void;
-    save(name: string | Attributes, value?: any): Promise<void>;
+    set(attributes: Attributes): void;
+
+    save(): Promise<void>;
+    save(name: string, value: any): Promise<void>;
+    save(attributes: Attributes): Promise<void>;
+
     remove(): Promise<void>;
+    refresh(): Promise<void>;
 
     toJSON(): any;
 
@@ -78,6 +87,7 @@ declare namespace Fluorite {
     including(...relations: Array<string>): this;
     limit(limit: number): this;
     offset(offset: number): this;
+    orderBy(column: string, direction?: OrderDirection);
 
     create(attributes: Attributes): Promise<T>;
     update(attributes: Attributes): Promise<void>;
@@ -85,7 +95,7 @@ declare namespace Fluorite {
   }
 
   export interface MultipleRowsQuery<T extends Model<any>> extends BaseQuery<T>, Promise<Array<T>> {
-    count(column: string): Promise<number>;
+    count(column?: string): Promise<number>;
     min(column: string): Promise<number | null>;
     max(column: string): Promise<number | null>;
     sum(column: string): Promise<number>;

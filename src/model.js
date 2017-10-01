@@ -180,6 +180,16 @@ export default fluorite => class Model {
     return this.update();
   }
 
+  async refresh() {
+    const attributes = await this.createKnexQuery()
+      .from(this.constructor.table)
+      .where(this.constructor.idAttribute, this.id)
+      .first();
+
+    this.attributes = attributes;
+    this.previousAttributes = Object.assign({}, attributes);
+  }
+
   async remove() {
     if (this.isNew) {
       throw new this.constructor.NotFoundError('Can\'t remove new entity');
@@ -210,5 +220,10 @@ export default fluorite => class Model {
       .update(updatedAttributes)
       .where({ [this.constructor.idAttribute]: this.id });
     this.previousAttributes = this.attributes;
+  }
+
+  async load(relation) {
+    const data = await this[relation];
+    this.setRelatedData(relation, data);
   }
 };

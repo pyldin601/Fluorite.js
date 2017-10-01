@@ -93,6 +93,10 @@ class BaseQuery {
     return this.query(q => q.offset(number));
   }
 
+  orderBy(column, direction) {
+    return this.query(q => q.orderBy(column, direction));
+  }
+
   async create(attributes) {
     const model = this.modelClass.create(attributes);
     await model.save();

@@ -47,6 +47,18 @@ describe('Query Tests', () => {
     ]);
   });
 
+  it('Should fetch with ordering', async () => {
+    const foos = await Foo.objects
+      .orderBy('age', 'desc');
+
+    expect(foos).toBeInstanceOf(Array);
+    expect(foos.map(foo => foo.toJSON())).toEqual([
+      { age: 72, id: 2, name: 'Bob Marley' },
+      { age: 46, id: 1, name: 'John Doe' },
+      { age: 12, id: 3, name: 'Billy' },
+    ]);
+  });
+
   it('Test simple filter', async () => {
     const foos = await Foo.objects.filter({ id__eq: 1 });
     expect(foos.length).toBe(1);

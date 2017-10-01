@@ -20,7 +20,7 @@ afterEach(async () => {
 
 describe('Model tests', () => {
   it('Test model instance', async () => {
-    const foo = Foo.create({ id: 10, name: 'Bob Marley' });
+    const foo = new Foo({ id: 10, name: 'Bob Marley' });
     expect(foo.id).toBe(10);
     expect(foo.get('name')).toBe('Bob Marley');
     expect(foo.isNew).toBeFalsy();
@@ -107,7 +107,7 @@ describe('Model tests', () => {
 
 
   it('Create entity', async () => {
-    const foo = Foo.create({ name: 'Alan Davey', age: 42 });
+    const foo = new Foo({ name: 'Alan Davey', age: 42 });
     expect(foo.isNew).toBeTruthy();
     expect(await Foo.objects.filter({ name__eq: 'Alan Davey' }).count()).toBe(0);
 
@@ -140,7 +140,7 @@ describe('Model tests', () => {
   });
 
   it('Fail if deleting new entity', () => (
-    expect(Foo.create({ name: 'Abc', age: 10 }).remove())
+    expect(new Foo({ name: 'Abc', age: 10 }).remove())
       .rejects.toBeInstanceOf(Foo.NotFoundError)
   ));
 
@@ -153,5 +153,16 @@ describe('Model tests', () => {
     expect(foo2.length).toBe(2);
 
     expect(() => Foo.objects.bar()).toThrow(TypeError);
+  });
+
+  it('Test refresh() method', async () => {
+    const foo = new Foo({ id: 1 });
+    await foo.refresh();
+
+    expect(foo.toJSON()).toEqual({
+      id: 1,
+      age: 46,
+      name: 'John Doe',
+    });
   });
 });
