@@ -32,7 +32,6 @@ export default fluorite => class Model {
   static table = null;
   static idAttribute = 'id';
   static scopes = {};
-  static columns = [];
 
   static get fluorite() {
     return fluorite;

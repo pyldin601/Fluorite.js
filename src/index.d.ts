@@ -26,7 +26,6 @@ declare namespace Fluorite {
     static table: string | null;
     static idAttribute: string;
     static scopes: { [name: string]: Scope };
-    static columns: Array<string>;
 
     static fluorite: Fluorite;
     static knex: Knex;
