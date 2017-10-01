@@ -57,5 +57,18 @@
       "jsx",
       "json"
     ]
-  }
+  },
+  "keywords": [
+    "orm",
+    "database",
+    "mysql",
+    "postgresql",
+    "sqlite",
+    "datamapper",
+    "active record",
+    "object relational mapper",
+    "es6",
+    "immutable",
+    "async"
+  ]
 }
