@@ -17,7 +17,7 @@
   "author": "Roman Lakhtadyr <roman.lakhtadyr@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^20.0.6",
+    "@types/jest": "^20.0.8",
     "@types/knex": "0.0.57",
     "@types/lodash": "^4.14.72",
     "babel-cli": "*",
@@ -34,12 +34,28 @@
     "eslint-plugin-import": "*",
     "eslint-plugin-jest": "^20",
     "jest": "^20",
-    "sqlite3": "*"
+    "sqlite3": "*",
+    "ts-jest": "^21.0.1",
+    "typescript": "^2.5.3"
   },
   "dependencies": {
     "continuation-local-storage": "^3.2.0",
     "knex": "*",
     "lodash": "*",
     "stream-to-async-iterator": "^0.2.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js",
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
   }
 }
