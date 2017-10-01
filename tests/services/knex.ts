@@ -1,4 +1,4 @@
-import knex from 'knex';
+import * as knex from 'knex';
 
 export default knex({
   client: 'sqlite3',

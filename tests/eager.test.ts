@@ -1,7 +1,7 @@
 import knex from './services/knex';
 import fluorite from './services/fluorite';
 
-class Address extends fluorite.Model {
+class Address extends fluorite.Model<Address> {
   static table = 'addresses';
   static columns = ['id', 'address'];
 
@@ -10,7 +10,7 @@ class Address extends fluorite.Model {
   }
 }
 
-class Place extends fluorite.Model {
+class Place extends fluorite.Model<Address> {
   static table = 'places';
   static columns = ['id', 'place', 'address_id'];
 
@@ -23,17 +23,17 @@ class Place extends fluorite.Model {
   }
 }
 
-class Thing extends fluorite.Model {
+class Thing extends fluorite.Model<Address> {
   static table = 'things';
   static columns = ['id', 'title', 'user_id'];
 }
 
-class Club extends fluorite.Model {
+class Club extends fluorite.Model<Address> {
   static table = 'clubs';
   static columns = ['id', 'title'];
 }
 
-class User extends fluorite.Model {
+class User extends fluorite.Model<Address> {
   static table = 'users';
   static columns = ['id', 'name', 'place_id'];
 

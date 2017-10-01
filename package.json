@@ -1,12 +1,13 @@
 {
   "name": "fluorite",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Lightweight ORM based on Knex.js query builder.",
   "main": "dist/index.js",
   "repository": "https://github.com/pldin601/Fluorite.js",
   "engines": {
     "node": "^8"
   },
+  "types": "src/index.d.ts",
   "scripts": {
     "test": "jest --verbose",
     "lint": "eslint src/",
@@ -18,7 +19,6 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^20.0.8",
-    "@types/knex": "0.0.57",
     "@types/lodash": "^4.14.72",
     "babel-cli": "*",
     "babel-eslint": "*",
@@ -42,7 +42,9 @@
     "continuation-local-storage": "^3.2.0",
     "knex": "*",
     "lodash": "*",
-    "stream-to-async-iterator": "^0.2.0"
+    "stream-to-async-iterator": "^0.2.0",
+    "@types/knex": "0.0.57",
+    "@types/continuation-local-storage": "^3.2.1"
   },
   "jest": {
     "transform": {
