@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/pldin601/Fluorite.js.svg?branch=master)](https://travis-ci.org/pldin601/Fluorite.js)
 [![Coverage Status](https://coveralls.io/repos/github/pldin601/Fluorite.js/badge.svg?branch=master)](https://coveralls.io/github/pldin601/Fluorite.js?branch=master)
 [![Code Climate](https://codeclimate.com/github/pldin601/Fluorite.js/badges/gpa.svg)](https://codeclimate.com/github/pldin601/Fluorite.js)
-
+[![Dependency Status](https://www.versioneye.com/user/projects/59cffe6f0fb24f1bf41494f9/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59cffe6f0fb24f1bf41494f9)
 
 Fluorite is a lightweight ORM based on Knex.js query builder.
 It features promise based interface, provides transactions support,
@@ -119,7 +119,7 @@ for await (const user of User.objects) {
 To filter query result use method `filter()` passing to it object with attributes for refining. 
 
 ```javascript
-const males = await User.objects.filter({ gender: 'male' });
+const men = await User.objects.filter({ gender: 'male' });
 ```
 
 By default used `=` operator for comparing. But you alter this behavior.
