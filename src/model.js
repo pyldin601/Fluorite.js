@@ -223,7 +223,7 @@ export default fluorite => class Model {
   }
 
   async load(relation) {
-    const data = await this[relation];
+    const data = await this[relation]();
     this.setRelatedData(relation, data);
   }
 };

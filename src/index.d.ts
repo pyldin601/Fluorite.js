@@ -76,6 +76,7 @@ declare namespace Fluorite {
     ): MultipleRowsQuery<R>;
 
     related(name: string): any;
+    load(relation: string): Promise<void>;
 
     static NotFoundError: typeof Error;
     static IntegrityError: typeof Error;

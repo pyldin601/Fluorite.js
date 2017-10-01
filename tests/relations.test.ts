@@ -68,6 +68,18 @@ describe('Test relations', () => {
       '[{"id":1,"name":"Thing #1","user_id":1},{"id":2,"name":"Thing #2","user_id":1}]',
     );
   });
+  it('Test load() method', async () => {
+    const user = await User.find(1);
+    await user.load('things');
+    expect(user.toJSON()).toEqual({
+      id: 1,
+      name: 'John Doe',
+      things: [
+        { id: 1, name: 'Thing #1', user_id: 1 },
+        { id: 2, name: 'Thing #2', user_id: 1 },
+      ],
+    });
+  });
   it('Test hasMany relation #2', async () => {
     const user = await User.find(2);
     const things = await user.things();
