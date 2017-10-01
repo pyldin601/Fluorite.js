@@ -159,6 +159,10 @@ export default fluorite => class Model {
     };
   }
 
+  setRelatedData(name, data) {
+    this.relatedModels[name] = data;
+  }
+
   /*
    * Methods that executes SQL statements
    */
@@ -181,7 +185,7 @@ export default fluorite => class Model {
       throw new this.constructor.NotFoundError('Can\'t remove new entity');
     }
 
-    return this.createKnexQuery()
+    await this.createKnexQuery()
       .where(this.constructor.idAttribute, this.id)
       .delete();
   }
@@ -206,9 +210,5 @@ export default fluorite => class Model {
       .update(updatedAttributes)
       .where({ [this.constructor.idAttribute]: this.id });
     this.previousAttributes = this.attributes;
-  }
-
-  setRelatedData(name, data) {
-    this.relatedModels[name] = data;
   }
 };
