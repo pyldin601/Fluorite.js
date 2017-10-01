@@ -31,7 +31,7 @@ declare namespace Fluorite {
     static fluorite: Fluorite;
     static knex: Knex;
 
-    static find(id: any): SingleRowQuery<Model<any>>;
+    static find<T extends Model<any>>(id: any): SingleRowQuery<T>;
     static objects: MultipleRowsQuery<Model<any>>;
 
     id: any;

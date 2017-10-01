@@ -58,7 +58,7 @@ afterEach(async () => {
 
 describe('Test relations', () => {
   it('Test hasMany relation #1', async () => {
-    const user = await User.find(1);
+    const user = await User.find<User>(1);
 
     expect(user).toBeInstanceOf(User);
 
