@@ -81,7 +81,7 @@ describe('Test relations', () => {
     });
   });
   it('Test hasMany relation #2', async () => {
-    const user = await User.find(2);
+    const user = await User.find<User>(2);
     const things = await user.things();
 
     expect(JSON.stringify(things)).toBe(
@@ -89,21 +89,21 @@ describe('Test relations', () => {
     );
   });
   it('Test hasMany relation #3', async () => {
-    const user = await User.find(3);
+    const user = await User.find<User>(3);
     const things = await user.things();
 
     expect(things.length).toBe(0);
   });
 
   it('Test belongsTo relation #1', async () => {
-    const thing = await Thing.find(3);
+    const thing = await Thing.find<Thing>(3);
     const user = await thing.user();
 
     expect(user.id).toBe(2);
   });
 
   it('Test belongsToMany relation #1', async () => {
-    const user = await User.find(1);
+    const user = await User.find<User>(1);
     const addresses = await user.addresses();
 
     expect(JSON.stringify(addresses)).toBe(
@@ -114,7 +114,7 @@ describe('Test relations', () => {
   });
 
   it('Test belongsToMany relation #2', async () => {
-    const user = await User.find(2);
+    const user = await User.find<User>(2);
     const addresses = await user.addresses();
 
     expect(JSON.stringify(addresses)).toBe(
@@ -124,14 +124,14 @@ describe('Test relations', () => {
   });
 
   it('Test belongsToMany relation #3', async () => {
-    const user = await User.find(3);
+    const user = await User.find<User>(3);
     const addresses = await user.addresses();
 
     expect(addresses.length).toBe(0);
   });
 
   it('Test belongsToMany relation #4', async () => {
-    const address = await Address.find(1);
+    const address = await Address.find<Address>(1);
     const users = await address.users();
 
     expect(JSON.stringify(users)).toBe(

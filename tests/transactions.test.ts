@@ -39,14 +39,14 @@ describe('Transactions', () => {
 
   it('Multiple action', async () => {
     await fluorite.transaction(async () => {
-      const user = await User.find(1);
+      const user = await User.find<User>(1);
       await user.posts().update({ title: 'New Title' });
     });
   });
 
   it('Return value from transaction', async () => {
     const posts = await fluorite.transaction(async () => {
-      const user = await User.find(1);
+      const user = await User.find<User>(1);
       await user.posts().update({ title: 'New Title' });
       return user.posts();
     });
