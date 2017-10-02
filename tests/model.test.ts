@@ -145,14 +145,14 @@ describe('Model tests', () => {
   ));
 
   it('Test scopes functionality', async () => {
-    const foo1 = await Foo.objects.firstOne();
+    const foo1 = await (Foo.objects as any).firstOne() as Foo[];
     expect(foo1.length).toBe(1);
 
-    const foo2 = await Foo.objects.lastFew(2);
+    const foo2 = await (Foo.objects as any).lastFew(2) as Foo[];
     expect(first(foo2).id).toBe(3);
     expect(foo2.length).toBe(2);
 
-    expect(() => Foo.objects.bar()).toThrow(TypeError);
+    expect(() => (Foo.objects as any).bar()).toThrow(TypeError);
   });
 
   it('Test refresh() method', async () => {

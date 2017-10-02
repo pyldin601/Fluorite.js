@@ -18,6 +18,7 @@ declare namespace Fluorite {
   type Scope = (qb: Knex.QueryBuilder, ...args: Array<any>) => Knex.QueryBuilder;
   type Attributes = { [name: string]: any };
   type OrderDirection = 'DESC' | 'ASC' | 'desc' | 'asc';
+  type Scopes = { [name: string]: Scope };
 
   type ModelSubclass<T extends Model<any>> = {
     new(attributes: Attributes, previousAttributes: Attributes): T;
@@ -26,7 +27,7 @@ declare namespace Fluorite {
   export abstract class Model<T extends Model<any>> {
     static table: string | null;
     static idAttribute: string;
-    static scopes: { [name: string]: Scope };
+    static scopes: Scopes;
 
     static fluorite: Fluorite;
     static knex: Knex;
