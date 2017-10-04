@@ -65,12 +65,9 @@ because it creates a connection pool for the current database.
 
 ## Basic actions
 ### Creating objects
-To create an model object, instantiate it with object representing attributes or
-call method `create()` with attributes on a model class and then call `save()`.
+To create an model object, instantiate it with object representing attributes and then call `save()`.
 ```javascript
 const user = new User({ name: 'John Doe', age: 28 });
-// or
-const user = User.create({ name: 'John Doe', age: 28 });
 
 await user.save();
 ```
