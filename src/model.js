@@ -80,8 +80,8 @@ export default fluorite => class Model {
   }
 
   createKnexQuery() {
-    const knex = this.constructor.knex;
-    const transaction = this.constructor.fluorite.transaction;
+    const { knex } = this.constructor;
+    const { transaction } = this.constructor.fluorite;
 
     if (transaction.isTransacting()) {
       return knex.transacting(transaction.currentTransaction())
@@ -212,7 +212,7 @@ export default fluorite => class Model {
   }
 
   async update() {
-    const updatedAttributes = this.updatedAttributes;
+    const { updatedAttributes } = this;
     if (isEmpty(updatedAttributes)) {
       return;
     }

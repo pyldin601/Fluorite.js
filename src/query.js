@@ -72,13 +72,17 @@ class BaseQuery {
 
   query(callback) {
     return new this.constructor(
-      this.modelClass, [...this.filters, callback], this.relationNames,
+      this.modelClass,
+      [...this.filters, callback],
+      this.relationNames,
     );
   }
 
   including(...relationNames) {
     return new this.constructor(
-      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+      this.modelClass,
+      this.filters,
+      [...this.relationNames, ...relationNames],
     );
   }
 
@@ -124,9 +128,8 @@ class BaseQuery {
     }
 
     const ModelClass = this.modelClass;
-    const models = rowData.map(
-      row => new ModelClass(row, Object.assign({}, row)),
-    );
+    const models = rowData
+      .map(row => new ModelClass(row, Object.assign({}, row)));
 
     await Promise.all(this.relationNames.map((name) => {
       const [head, tail] = name.split('.', 2);
