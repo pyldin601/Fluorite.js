@@ -105,14 +105,14 @@ can be used to retrieve or bulk update group of objects.
 ### Retrieving all objects
 To retrieve all objects use `async/await` or `then` promise syntax on the query:
 ```javascript
-const users = await User.objects;
+const users = await User.objects();
 // or
-User.objects.then(users => console.log(users));
+User.objects().then(users => console.log(users));
 ```
 
 You can also use experimental `asyncInterator` syntax to iterate over database rows:
 ```javascript
-for await (const user of User.objects) {
+for await (const user of User.objects()) {
   console.log(user.get('name'));
 }
 ```
@@ -121,7 +121,7 @@ for await (const user of User.objects) {
 To filter query result use method `filter()` passing to it object with attributes for refining. 
 
 ```javascript
-const men = await User.objects.filter({ gender: 'male' });
+const men = await User.objects().filter({ gender: 'male' });
 ```
 
 By default used `=` operator for comparing. But you alter this behavior.
@@ -138,9 +138,9 @@ Just add double underscore and operator name after property name (example: `age_
 * `like` evaluates to **LIKE**
 
 ```javascript
-const adults = await User.objects.filter({ age__gte: 18 });
-const users = await User.objects.filter({ id__in: [1, 2, 3] });
-const irishes = await User.objects.filter({ name__like: 'Mac%' });
+const adults = await User.objects().filter({ age__gte: 18 });
+const users = await User.objects().filter({ id__in: [1, 2, 3] });
+const irish = await User.objects().filter({ name__like: 'Mac%' });
 ```
 
 ### Chaining filters
@@ -159,8 +159,8 @@ over query.
 To limit amount of objects to be returned use `limit()`.
 You could also use `offset()` to specify offset for objects query.
 ```javascript
-const firstFiveUsers = await User.objects.limit(5);
-const nextFiveUsers = await User.object.limit(5).offset(5);
+const firstFiveUsers = await User.objects().limit(5);
+const nextFiveUsers = await User.objects().limit(5).offset(5);
 ``` 
 
 ### Retrieve single object
@@ -173,13 +173,13 @@ const user = await User.find(5);
 
 2. If you expect to retrieve only single row:
 ```javascript
-const user = await User.objects.single({ name: 'John Doe' });
+const user = await User.objects().single({ name: 'John Doe' });
 ```
 It will fail with `User.IntegrityError` if SQL statement returned more than one row.
 
 3. If you want to get only first row in multi-row statement:
 ```javascript
-const user = await User.objects.first({ name: 'John Doe' });
+const user = await User.objects().first({ name: 'John Doe' });
 ```
 
 If object matching your criteria does not exist `Model.NotFoundError` will be thrown.

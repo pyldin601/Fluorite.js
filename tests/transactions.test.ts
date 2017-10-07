@@ -1,6 +1,5 @@
 import knex from './services/knex';
 import User from './models/User';
-import Post from './models/Post';
 import fluorite from './services/fluorite';
 
 beforeEach(async () => {

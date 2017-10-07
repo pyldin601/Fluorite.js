@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 import { first, isEmpty, identity } from 'lodash';
 import StreamToAsync from 'stream-to-async-iterator';
 import filterQuery from './filter';

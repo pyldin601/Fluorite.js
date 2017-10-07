@@ -24,10 +24,6 @@ import { find } from 'lodash';
 import { SingleRowQuery, MultipleRowsQuery } from './query';
 import * as unsafe from './util/unsafe';
 
-export const BELONGS_TO_RELATION = 'belongsTo';
-export const HAS_MANY_RELATION = 'hasMany';
-export const BELONGS_TO_MANY_RELATION = 'belongsToMany';
-
 export class BelongsTo extends SingleRowQuery {
   constructor(
     sourceEntity,
@@ -36,7 +32,6 @@ export class BelongsTo extends SingleRowQuery {
     foreignKeyTarget,
   ) {
     super(relatedClass, [qb => qb.where({ [foreignKeyTarget]: sourceEntity.get(foreignKey) })]);
-    this.relationType = BELONGS_TO_RELATION;
 
     this.foreignKey = foreignKey;
     this.foreignKeyTarget = foreignKeyTarget;
@@ -48,7 +43,9 @@ export class BelongsTo extends SingleRowQuery {
 
   including(...relationNames) {
     return new SingleRowQuery(
-      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+      this.modelClass,
+      this.filters,
+      [...this.relationNames, ...relationNames],
     );
   }
 
@@ -57,7 +54,7 @@ export class BelongsTo extends SingleRowQuery {
     const ids = rowData.map(row => row[that.foreignKey]);
 
     let query = this.modelClass
-      .objects
+      .objects()
       .filter({ id__in: ids });
 
     if (nestedRelations) {
@@ -86,7 +83,6 @@ export class HasMany extends MultipleRowsQuery {
     foreignKeyTarget,
   ) {
     super(relatedClass, [qb => qb.where({ [foreignKey]: sourceEntity.get(foreignKeyTarget) })]);
-    this.relationType = HAS_MANY_RELATION;
     this.foreignKey = foreignKey;
   }
 
@@ -96,7 +92,9 @@ export class HasMany extends MultipleRowsQuery {
 
   including(...relationNames) {
     return new MultipleRowsQuery(
-      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+      this.modelClass,
+      this.filters,
+      [...this.relationNames, ...relationNames],
     );
   }
 
@@ -105,7 +103,7 @@ export class HasMany extends MultipleRowsQuery {
     const ids = rows.map(row => row.id);
 
     let query = this.modelClass
-      .objects
+      .objects()
       .filter({ [`${this.foreignKey}__in`]: ids });
 
     if (nestedRelations) {
@@ -115,9 +113,8 @@ export class HasMany extends MultipleRowsQuery {
     const relatedModels = await query;
 
     models.map((model) => {
-      const filteredModels = relatedModels.filter(
-        m => unsafe.eq(m.get(that.foreignKey), model.id),
-      );
+      const filteredModels = relatedModels
+        .filter(m => unsafe.eq(m.get(that.foreignKey), model.id));
       return model.setRelatedData(relationName, filteredModels);
     });
 
@@ -144,7 +141,6 @@ export class BelongsToMany extends MultipleRowsQuery {
       .select(`${relatedClass.table}.*`)
       .where({ [`${pivotTableName}.${thisForeignKey}`]: sourceEntity.get(thisForeignKeyTarget) }),
     ]);
-    this.relationType = BELONGS_TO_MANY_RELATION;
     this.pivotTableName = pivotTableName;
     this.thisForeignKey = thisForeignKey;
     this.thatForeignKey = thatForeignKey;
@@ -157,7 +153,9 @@ export class BelongsToMany extends MultipleRowsQuery {
 
   including(...relationNames) {
     return new MultipleRowsQuery(
-      this.modelClass, this.filters, [...this.relationNames, ...relationNames],
+      this.modelClass,
+      this.filters,
+      [...this.relationNames, ...relationNames],
     );
   }
 
@@ -167,7 +165,7 @@ export class BelongsToMany extends MultipleRowsQuery {
     const tempColumnName = '__related_id';
 
     let query = this.modelClass
-      .objects
+      .objects()
       .query(qb => (
         qb
           .innerJoin(
@@ -186,9 +184,8 @@ export class BelongsToMany extends MultipleRowsQuery {
     const relatedModels = await query;
 
     models.map((model) => {
-      const filteredModels = relatedModels.filter(
-        m => unsafe.eq(m.get(tempColumnName), model.id),
-      );
+      const filteredModels = relatedModels
+        .filter(m => unsafe.eq(m.get(tempColumnName), model.id));
       return model.setRelatedData(relationName, filteredModels);
     });
 

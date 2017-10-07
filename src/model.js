@@ -45,12 +45,12 @@ export default fluorite => class Model {
     return new this(attrs);
   }
 
-  static get objects() {
+  static objects() {
     return new MultipleRowsQuery(this);
   }
 
   static find(id) {
-    return this.objects.first({ [this.idAttribute]: id });
+    return this.objects().first({ [this.idAttribute]: id });
   }
 
   constructor(attributes, previousAttributes = {}) {

@@ -47,8 +47,8 @@ describe('Model tests', () => {
   });
 
   it('Test serialization', async () => {
-    const foos = await Foo.objects;
-    const json = foos.map(foo => foo.toJSON());
+    const foos = await Foo.objects<Foo>();
+    const json = foos.map((foo: Foo) => foo.toJSON());
     expect(json).toEqual(
       [
         { id: 1, name: 'John Doe', age: 46 },
@@ -59,32 +59,32 @@ describe('Model tests', () => {
   });
 
   it('Test filter "eq"', async () => {
-    const foos = await Foo.objects.filter({ age__eq: 12 });
+    const foos = await Foo.objects().filter({ age__eq: 12 });
     expect(foos.length).toBe(1);
   });
 
   it('Test filter "gt"', async () => {
-    const foos = await Foo.objects.filter({ age__gt: 18 });
+    const foos = await Foo.objects().filter({ age__gt: 18 });
     expect(foos.length).toBe(2);
   });
 
   it('Test max aggregation', async () => {
-    const maxAge = await Foo.objects.max('age');
+    const maxAge = await Foo.objects().max('age');
     expect(maxAge).toBe(72);
   });
 
   it('Test aggregation on empty collection', async () => {
-    const maxAge = await Foo.objects.filter({ age__gt: 100 }).max('age');
+    const maxAge = await Foo.objects().filter({ age__gt: 100 }).max('age');
     expect(maxAge).toBeNull();
   });
 
   it('Test count on empty collection', async () => {
-    const maxAge = await Foo.objects.filter({ age__gt: 100 }).count();
+    const maxAge = await Foo.objects().filter({ age__gt: 100 }).count();
     expect(maxAge).toBe(0);
   });
 
   it('Test clone', async () => {
-    const qb1 = Foo.objects;
+    const qb1 = Foo.objects();
 
 
     const qb2 = qb1.filter({ age__gt: 18 });
@@ -96,12 +96,12 @@ describe('Model tests', () => {
   });
 
   it('Fetch One', async () => {
-    const foo = await Foo.objects.first();
+    const foo = await Foo.objects().first();
     expect(foo).toBeInstanceOf(Foo);
   });
 
   it('Fetch One (integrity error)', () => {
-    const foo = Foo.objects.single();
+    const foo = Foo.objects().single();
     return expect(foo).rejects.toBeInstanceOf(Foo.IntegrityError);
   });
 
@@ -109,11 +109,11 @@ describe('Model tests', () => {
   it('Create entity', async () => {
     const foo = new Foo({ name: 'Alan Davey', age: 42 });
     expect(foo.isNew).toBeTruthy();
-    expect(await Foo.objects.filter({ name__eq: 'Alan Davey' }).count()).toBe(0);
+    expect(await Foo.objects().filter({ name__eq: 'Alan Davey' }).count()).toBe(0);
 
     await foo.save();
     expect(foo.isNew).toBeFalsy();
-    expect(await Foo.objects.filter({ name__eq: 'Alan Davey' }).count()).toBe(1);
+    expect(await Foo.objects().filter({ name__eq: 'Alan Davey' }).count()).toBe(1);
   });
 
   it('Update entity', async () => {
@@ -145,14 +145,14 @@ describe('Model tests', () => {
   ));
 
   it('Test scopes functionality', async () => {
-    const foo1 = await (Foo.objects as any).firstOne() as Foo[];
+    const foo1 = await (Foo.objects() as any).firstOne() as Foo[];
     expect(foo1.length).toBe(1);
 
-    const foo2 = await (Foo.objects as any).lastFew(2) as Foo[];
+    const foo2 = await (Foo.objects() as any).lastFew(2) as Foo[];
     expect(first(foo2).id).toBe(3);
     expect(foo2.length).toBe(2);
 
-    expect(() => (Foo.objects as any).bar()).toThrow(TypeError);
+    expect(() => (Foo.objects() as any).bar()).toThrow(TypeError);
   });
 
   it('Test refresh() method', async () => {

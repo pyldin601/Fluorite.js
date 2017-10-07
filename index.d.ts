@@ -2,14 +2,12 @@
 // Project: https://github.com/pldin601/Fluorite.js
 // Definitions by: Roman Lakhtadyr <roman.lakhtadyr@gmail.com>
 // TypeScript Version: 2.5
-
-import Knex = require('knex');
+import * as Knex from 'knex';
 
 declare namespace Fluorite {
-  type Scope = (qb: Knex.QueryBuilder, ...args: Array<any>) => Knex.QueryBuilder;
+  type Scope = (qb: BaseQuery<Model<any>>, ...args: Array<any>) => BaseQuery<Model<any>>;
   type Attributes = { [name: string]: any };
   type OrderDirection = 'DESC' | 'ASC' | 'desc' | 'asc';
-  type Scopes = { [name: string]: Scope };
 
   type ModelSubclass<T extends Model<any>> = {
     new(attributes: Attributes, previousAttributes: Attributes): T;
@@ -18,13 +16,13 @@ declare namespace Fluorite {
   abstract class Model<T extends Model<any>> {
     static table: string | null;
     static idAttribute: string;
-    static scopes: Scopes;
+    static scopes: { [name: string]: Scope };
 
     static fluorite: Fluorite;
     static knex: Knex;
 
     static find<T extends Model<any>>(id: any): SingleRowQuery<T>;
-    static objects: MultipleRowsQuery<Model<any>>;
+    static objects<T extends Model<any>>(): MultipleRowsQuery<T>;
 
     id: any;
     attributes: Attributes;
@@ -50,13 +48,13 @@ declare namespace Fluorite {
       relatedClass: ModelSubclass<R>,
       foreignKey?: string,
       foreignKeyTarget?: string,
-    ): MultipleRowsQuery<R>;
+    ): HasMany<R>;
 
     belongsTo<R extends Model<any>>(
       relatedClass: ModelSubclass<R>,
       foreignKey?: string,
       foreignKeyTarget?: string,
-    ): SingleRowQuery<R>;
+    ): BelongsTo<R>;
 
     belongsToMany<R extends Model<any>>(
       relatedClass: ModelSubclass<R>,
@@ -65,10 +63,11 @@ declare namespace Fluorite {
       thatForeignKey?: string,
       thisForeignKeyTarget?: string,
       thatForeignKeyTarget?: string,
-    ): MultipleRowsQuery<R>;
+    ): BelongsToMany<R>;
 
     related(name: string): any;
     load(relation: string): Promise<void>;
+    setRelatedData(name: string, data: Model<any> | Array<Model<any>>): void;
 
     static NotFoundError: typeof Error;
     static IntegrityError: typeof Error;
@@ -80,7 +79,7 @@ declare namespace Fluorite {
     including(...relations: Array<string>): this;
     limit(limit: number): this;
     offset(offset: number): this;
-    orderBy(column: string, direction?: OrderDirection);
+    orderBy(column: string, direction?: OrderDirection): this;
 
     create(attributes: Attributes): Promise<T>;
     update(attributes: Attributes): Promise<void>;
@@ -93,19 +92,24 @@ declare namespace Fluorite {
     max(column: string): Promise<number | null>;
     sum(column: string): Promise<number>;
     avg(column: string): Promise<number | null>;
-    pluck(column: string): Promise<Array<any>>;
+    pluck(column: string): Promise<Array<T>>;
     single(attributes?: Attributes): SingleRowQuery<T>;
     first(attributes?: Attributes): SingleRowQuery<T>;
   }
 
   interface SingleRowQuery<T extends Model<any>> extends BaseQuery<T>, Promise<T> {}
+
+  interface BelongsTo<T extends Model<any>> extends SingleRowQuery<T> {}
+  interface HasMany<T extends Model<any>> extends MultipleRowsQuery<T> {}
+  interface BelongsToMany<T extends Model<any>> extends MultipleRowsQuery<T> {}
+
+
+  interface Fluorite {
+    Model: typeof Fluorite.Model;
+    transaction<T>(callback: () => Promise<T>): Promise<T>;
+  }
 }
 
-interface Fluorite {
-  Model: typeof Fluorite.Model;
-  transaction<T>(callback: () => Promise<T>): Promise<T>;
-}
+declare function Fluorite(knex: Knex): Fluorite.Fluorite;
 
-declare function Fluorite(knex: Knex): Fluorite;
-
-export default Fluorite;
+export = Fluorite;

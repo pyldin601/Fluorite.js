@@ -1,4 +1,6 @@
 import knex from './knex';
 import fluorite from '../../src/';
 
-export default fluorite(knex);
+import { Fluorite } from '../../';
+
+export default fluorite(knex) as any as Fluorite;
