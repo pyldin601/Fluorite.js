@@ -5,15 +5,6 @@
 
 import Knex = require('knex');
 
-declare function Fluorite(knex: Knex): Fluorite;
-
-export default Fluorite;
-
-interface Fluorite {
-  Model: typeof Fluorite.Model;
-  transaction<T>(callback: () => Promise<T>): Promise<T>;
-}
-
 declare namespace Fluorite {
   type Scope = (qb: Knex.QueryBuilder, ...args: Array<any>) => Knex.QueryBuilder;
   type Attributes = { [name: string]: any };
@@ -24,7 +15,7 @@ declare namespace Fluorite {
     new(attributes: Attributes, previousAttributes: Attributes): T;
   }
 
-  export abstract class Model<T extends Model<any>> {
+  abstract class Model<T extends Model<any>> {
     static table: string | null;
     static idAttribute: string;
     static scopes: Scopes;
@@ -96,7 +87,7 @@ declare namespace Fluorite {
     remove(): Promise<void>;
   }
 
-  export interface MultipleRowsQuery<T extends Model<any>> extends BaseQuery<T>, Promise<Array<T>> {
+  interface MultipleRowsQuery<T extends Model<any>> extends BaseQuery<T>, Promise<Array<T>> {
     count(column?: string): Promise<number>;
     min(column: string): Promise<number | null>;
     max(column: string): Promise<number | null>;
@@ -107,5 +98,14 @@ declare namespace Fluorite {
     first(attributes?: Attributes): SingleRowQuery<T>;
   }
 
-  export interface SingleRowQuery<T extends Model<any>> extends BaseQuery<T>, Promise<T> {}
+  interface SingleRowQuery<T extends Model<any>> extends BaseQuery<T>, Promise<T> {}
 }
+
+interface Fluorite {
+  Model: typeof Fluorite.Model;
+  transaction<T>(callback: () => Promise<T>): Promise<T>;
+}
+
+declare function Fluorite(knex: Knex): Fluorite;
+
+export default Fluorite;
